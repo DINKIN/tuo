@@ -6,4 +6,6 @@
 
 4. Build website. 
 
-5. Release Products 1.0. (After 1,4)
+*5. Release Infrastructure Products 1.0. (After 1,4)
+
+*6. Marketing. Build marketing channel. (After 5)
