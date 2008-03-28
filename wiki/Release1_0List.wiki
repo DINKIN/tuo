@@ -1,0 +1,18 @@
+Features:
+1. Multi-Radio 
+2. Static (Dynamic, optional) Multi-Channel
+3. Basic Encryption.
+
+Software:
+1. 11s implementation.
+2. iw.
+3. Single node web admin UI.
+
+Hardware:
+1. Mini-box dual radio box.
+2. Renew the box.
+
+Document:
+1. User manual.
+2. White Paper.
+3. Product Description.
