@@ -1,13 +1,12 @@
-#summary One-sentence summary of this page.
+#A brief plan description for the meeting.
 
 = Introduction =
 
-Add your content here.
+Discuss the 802.11s draft detail.
 
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Contents:
+  * How to implement the multi-radio.
+  * How to support the encryption.
