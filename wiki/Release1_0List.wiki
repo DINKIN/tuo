@@ -1,12 +1,12 @@
 Features:
-1. Multi-Radio 
-2. Static (Dynamic, optional) Multi-Channel
-3. Basic Encryption.
+1. Multi-Radio (April-July, Scott)
+2. Static (Dynamic, optional) Multi-Channel  (April-July, Scott)
+3. Basic Encryption.  (April-June, Jerry)
 
 Software:
 1. 11s implementation.
-2. iw.
-3. Single node web admin UI.
+2. iw. (Scott)
+3. Single node web admin UI. (One Month before Release, Jerry)
 
 Hardware:
 1. Mini-box dual radio box.
