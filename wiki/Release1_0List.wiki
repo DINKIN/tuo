@@ -13,6 +13,6 @@ Hardware:
 2. Renew the box.
 
 Document:
-1. User manual.
-2. White Paper.
-3. Product Description.
+1. User manual. (One Month before Release)
+2. White Paper.  (One Month before Release)
+3. Product Description.  (One Month before Release)
