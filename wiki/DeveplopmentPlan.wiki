@@ -1,5 +1,11 @@
 1. Build development environment. (Finish)
 
-2. Install the testbed environment and documentation. (caojing)
+2. Install the testbed environment, demo and documentation. (Scott)
 
-3.
+3. Security Function. (jerry)
+
+4. Multi-Radio.  (Scott)
+
+5. Multi-Channel.  (Scott)
+
+6. QoS Support.  (Scott)
