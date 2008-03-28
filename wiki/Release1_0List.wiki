@@ -10,7 +10,7 @@ Software:
 
 Hardware:
 1. Mini-box dual radio box.
-2. Renew the box.
+2. Renew the box.  (One Month before Release)
 
 Document:
 1. User manual. (One Month before Release)
