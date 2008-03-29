@@ -1,0 +1,13 @@
+#Document for how install soekris nodes and min-box nodes.
+
+= Introduction =
+
+Add your content here.
+
+
+= Soekris Nodes =
+
+Steps:
+  * Compile the kernel using the configure file linux_for_soekris.config under 2.6.24.4 dictionary.
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
