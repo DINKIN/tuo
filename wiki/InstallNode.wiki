@@ -24,6 +24,7 @@ title tuo
 root (hd0,0)
 kernel /boot/linux-2.6.24.4-tuo root=/dev/hda1 console=ttyS0,19200n8
 
+  * umount /dev/sdb1
 
 == Minicom configuration for soekris ==
 Serial Device : /dev/ttyS0
