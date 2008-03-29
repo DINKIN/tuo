@@ -26,6 +26,9 @@ kernel /boot/linux-2.6.24.4-tuo root=/dev/hda1 console=ttyS0,19200n8
 
   * umount /dev/sdb1
 
+== compile compat-wireless ==
+  * make KLIB=/lib/modules/2.6.24.4-tuo
+
 == Minicom configuration for soekris ==
 Serial Device : /dev/ttyS0
 Bps/Par/Bits : 19200 8N1
