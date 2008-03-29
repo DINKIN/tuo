@@ -7,7 +7,9 @@ Add your content here.
 
 = Soekris Nodes =
 
-Steps:
+== Kernel ==:
   * Compile the kernel using the configure file linux_for_soekris.config under 2.6.24.4 directory: make mrproper; make menuconfig; load the configuration file; make; make modules_install; make install.
   * 
   * Automatic links to other wiki pages
+
+= Soekris Nodes =
