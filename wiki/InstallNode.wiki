@@ -12,9 +12,16 @@ Add your content here.
   * dd if=pyramid-1.0b4.img of=/dev/sdb bs=512
   * umount /dev/sdb1; umount /dev/sdb
   * resize the partition by "parted /dev/sdb"; "resize", not more than 200MB for 512MB card (I don't why)
+  * login account : username/password root/root
 
 == Kernel ==
   * Compile the kernel using the configure file linux_for_soekris.config under 2.6.24.4 directory: make mrproper; make menuconfig; load the configuration file; make; make modules_install; make install.
   * 
+
+== Minicom configuration for soekris ==
+Serial Device : /dev/ttyS0
+Bps/Par/Bits : 19200 8N1
+
+http://www.cyberciti.biz/tips/connect-soekris-single-board-computer-using-minicom.html
 
 = Soekris Nodes =
