@@ -1,0 +1,16 @@
+#bug report for ath5k txpower setting 
+
+= Introduction =
+
+ath5k doesn't support change the txpower. Correlative function and data structure as follow:
+
+  * iw extension handler define in mac80211
+
+ieee80211_iw_handler_def --> ieee80211_handler -->
+ieee80211_ioctl_siwtxpower --> ieee80211_hw_config --> 
+
+  * register data structure.
+ath5k_hw_ops --> 
+
+  * handler in ath5k
+ath5k_config --> ath5k_chan_set --> ath5k_hw_set_txpower_limit --> ath5k_hw_txpower --> ath5k_txpower_table
