@@ -10,3 +10,13 @@ Discuss the 802.11s draft detail.
 Contents:
   * How to implement the multi-radio.
   * How to support the encryption.
+
+= Summary =
+
+Multi-Radio support:
+  * only one path table (routing table) _mesh_paths_ for all interfaces.
+
+
+Encryption:
+
+  
