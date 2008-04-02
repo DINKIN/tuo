@@ -54,11 +54,13 @@ sleep 1;
 == compile libnl ==
   * change the Makefile, specific the kernel source path.
   * update file inclue/linux/pkt_sched.h in kernel source tree
+  * copy lib/libnl.so.1 to nodes /usr/lib
 
 == compile iw ==
   * copy 11s/include/linux/nl80211.h to 2.6.24.4/include/linux/
   * modify the .config and Makefile
   * make
+  * copy iw to nodes /usr/bin
 
 == Minicom configuration for soekris ==
 Serial Device : /dev/ttyS0
