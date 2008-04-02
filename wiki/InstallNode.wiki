@@ -51,6 +51,10 @@ sleep 1;
 #`insmod /ro/root/ath5k/ath5k.ko`;
 sleep 1;
 
+== compile libnl ==
+  * change the Makefile, specific the kernel source path.
+  * update file inclue/linux/pkt_sched.h in kernel source tree
+
 == compile iw ==
   * copy 11s/include/linux/nl80211.h to 2.6.24.4/include/linux/
   * modify the .config and Makefile
