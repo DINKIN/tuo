@@ -5,7 +5,16 @@ Add your content here.
 
 = Scheduling by priority queue =
 
-:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Useful Commands:
+
+  * show queue discipline.
+﻿
+tc qdisc show [ dev eth0 ]
+
+  * add a priority queue
+﻿
+tc qdisc add dev eth0 root handle 1: prio 	 
+
+  * add a filter for priority queue
+﻿
+tc filter add dev $DEV parent 1: protocol ip prio 1 u32 match ip dst 192.168.1.5/32 flowid 1:1 
