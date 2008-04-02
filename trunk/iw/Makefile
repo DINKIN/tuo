@@ -1,9 +1,7 @@
 -include .config
 
 CC ?= "gcc"
-KERNEL_DIR=`$(SHELL) uname -r`
-#CFLAGS += -Wall -I/lib/modules/$(KERNEL_DIR)/build/include -g
-CFLAGS += -Wall -I/lib/modules/2.6.23.14-64.fc7/build/include -g
+CFLAGS += -Wall -I/lib/modules/$(KERNEL_VERSION)/build/include -g
 LDFLAGS += -lnl
 
 OBJS = iw.o interface.o info.o station.o util.o mpath.o

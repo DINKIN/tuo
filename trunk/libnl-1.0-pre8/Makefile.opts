@@ -30,7 +30,7 @@ RM               := rm
 LN               := ln
 
 DEPFLAGS         += -M -I../include/ -I. $(CPPFLAGS)
-CFLAGS           += -g -I./include -I../include -I. $(CPPFLAGS) -D_GNU_SOURCE
+CFLAGS           += -g -I/home/caojing/linux-2.6.24.4/include/ -I./include -I../include -I. $(CPPFLAGS) -D_GNU_SOURCE
 MAKEFLAGS        += --no-print-directory
 
 ifeq ($(CC),gcc)
