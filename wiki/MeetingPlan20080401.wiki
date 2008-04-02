@@ -15,6 +15,7 @@ Contents:
 
 Multi-Radio support:
   * only one path table (routing table) _mesh_paths_ for all interfaces.
+  * _ifsta->preq_queue_ storage the destination addresses which are waiting for routing calculation.
 
 
 Encryption:
