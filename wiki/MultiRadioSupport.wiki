@@ -7,7 +7,7 @@ Add your content here.
 
 = Forwarding =
 
- * ieee80211s_lookup_nexthop - put the appropriate next hop on a mesh frame
+== ieee80211s_lookup_nexthop - put the appropriate next hop on a mesh frame ==
  * @next_hop: output argument for next hop address
  * @skb: frame to be sent
  * @dev: network device the frame will be sent through
