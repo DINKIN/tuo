@@ -1,0 +1,23 @@
+#Modification for Supporting Multi-Radio Mesh Node.
+
+= Introduction =
+
+Add your content here.
+
+
+= mesh_nexthop_lookup =
+
+/**
+ * ieee80211s_lookup_nexthop - put the appropriate next hop on a mesh frame
+ *
+ * @next_hop: output argument for next hop address
+ * @skb: frame to be sent
+ * @dev: network device the frame will be sent through
+ *
+ * Returns: 0 if the next hop was found. Nonzero otherwise. If no next hop is
+ * found, the function will start a path discovery and queue the frame so it is
+ * sent when the path is resolved. This means the caller must not free the skb
+ * in this case.
+ */
+int mesh_nexthop_lookup(u8 *next_hop, struct sk_buff *skb,
+		struct net_device *dev)
