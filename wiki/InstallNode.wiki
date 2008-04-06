@@ -68,4 +68,9 @@ Bps/Par/Bits : 19200 8N1
 
 http://www.cyberciti.biz/tips/connect-soekris-single-board-computer-using-minicom.html
 
-= Soekris Nodes =
+= Mini-box Nodes =
+
+== Minicom configuration  ==
+Serial Device : /dev/ttyS0
+Bps/Par/Bits : 38400 8N1
+using a nullmodem (crossover) serial cable
