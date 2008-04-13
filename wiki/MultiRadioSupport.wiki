@@ -1,9 +1,16 @@
 #Modification for Supporting Multi-Radio Mesh Node.
 
-= Introduction =
+= Routing Table =
 
-Add your content here.
+Find routing item by hashing destination MAC rather than destination MAC and packet incoming interface.
 
+Modify in function 
+
+= PREQ =
+
+Initial node copy the PREQ packet to each Mesh-Point interface in function ....
+
+Forwarding PREQ packet to each Mesh-Point interface in function ....
 
 = Forwarding =
 
