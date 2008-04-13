@@ -28,29 +28,31 @@ kernel /boot/linux-2.6.24.4-tuo root=/dev/hda1 console=ttyS0,19200n8
 
 == compile compat-wireless ==
   * make KLIB=/lib/modules/2.6.24.4-tuo
+  * for local install, type make install
   * copy mac80211.ko cfg80211.ko ath5k.ko to directory /ath5k. Then copy to /lib/modules/2.6.24.4-tuo/updates/
 
+{{{
 pyramid:/ro/root# cp ath5k/ath5k.ko /lib/modules/2.6.24.4-tuo/updates/drivers/net/wireless/ath5k/ath5k.ko
 pyramid:/ro/root# cp ath5k/cfg80211.ko /lib/modules/2.6.24.4-tuo/updates/net/wireless/cfg80211.ko
 pyramid:/ro/root# cp ./ath5k/mac80211.ko /lib/modules/2.6.24.4-tuo/updates/net/mac80211/mac80211.ko
-
+}}}
   * then install those modules by the follow order
-
-insmod /ath5k/mac802.11.ko
+{{{
 insmod /ath5k/cfg80211.ko
+insmod /ath5k/mac802.11.ko
 insmod /ath5k/ath5k.ko
 
-sleep 1;
-`modprobe mac80211`;
-#`insmod /ro/root/ath5k/mac80211.ko`;
 sleep 1;
 `modprobe cfg80211`;
 #`insmod /ro/root/ath5k/cfg80211.ko`;
 sleep 1;
+`modprobe mac80211`;
+#`insmod /ro/root/ath5k/mac80211.ko`;
+sleep 1;
 `modprobe ath5k`;
 #`insmod /ro/root/ath5k/ath5k.ko`;
 sleep 1;
-
+}}}
 == compile libnl ==
   * change the Makefile, specific the kernel source path.
   * update file inclue/linux/pkt_sched.h in kernel source tree
