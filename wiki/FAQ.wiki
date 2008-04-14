@@ -14,11 +14,24 @@
     # 一个MP的覆盖范围有多大？
     # ESS的容量如何扩展?
     # 多跳的延时(latency)有多大？
+    # 多个Radio（Channel）对带宽和时延的影响？
   
     
-  * Multiple
 
 = FAQ Detailed Answers =
+
+  * 相关技术比较
+    # Mesh与Wifi的比较
+      Wifi的AP覆盖范围小，不支持多跳。
+    # Mesh与WiMax的比较
+    # Mesh与3G的比较
+    # Mesh的频率资源
+    # Mesh和11a, 11b, 11g, 11i, 11n, 11r, 11w的关系
+
+
+
+
+
 
 Add your content here.  Format your content with:
   * Text in *bold* or _italic_
