@@ -2,11 +2,10 @@
 
 = FAQ List=
 
-Add your content here.
-#MP和STA之间的带宽能达到多少？
-#MP和MP之间接力带宽能达到多少？
-#一个MP的覆盖范围有多大？
-#一个
+# MP和STA之间的带宽能达到多少？
+# MP和MP之间接力带宽能达到多少？
+# 一个MP的覆盖范围有多大？
+# 一个
 
 
 = FAQ Details =
