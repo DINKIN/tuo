@@ -19,4 +19,7 @@ Generally, messages will be log into /usr/adm/messages,/usr/adm/debug, and /usr/
 
 Message that priority is higher then KERN_ERR (not included, klogd -c 3) will be direct to system console but X terminal, i.e., if you like to see the critial messages from kernel (modules,) do not load modules within a X terminal. If you insist to do that (display message on X terminal,) write a new printk.
 
+/proc/sys/kernel/printk 
+Here's the section of the proc man page that pretends to explain it: The  four  values  in  the  file  printk  are  console_loglevel, default_message_loglevel, minimum_console_level and default_console_loglevel.  These values influence  printk()  behavior when printing  or logging error messages. See syslog(2) for more info on the different loglevels.  Messages  with  a  higher priority than  console_loglevel will be printed to the console. Messages               without an explicit  priority  will  be  printed  with priority default_message_level. minimum_console_loglevel is the minimum (highest)  value  to  which   console_loglevel can   be set. default_console_loglevel   is   the   default   value  for console_loglevel.
+	
 Read manual of klogd (man klogd) for more information.
