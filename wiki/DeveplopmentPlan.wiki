@@ -1,13 +1,7 @@
   # Build development environment. (Finish)
-
   # Customize kernel configuration file, deploy 11s to mini-box and soekris. Install the testbed environment, demo and documentation. (Scott)
-
   # Security Function. (jerry)
-
   # Support AP.  (Scott)
-
-  #Multi-Radio.  (Scott)
-
-  #Multi-Channel.  (Scott)
-
-  #QoS Support.  (Scott)
+  # Multi-Radio.  (Scott)
+  # Multi-Channel.  (Scott)
+  # QoS Support.  (Scott)
