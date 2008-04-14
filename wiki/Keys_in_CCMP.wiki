@@ -1,13 +1,10 @@
-#summary One-sentence summary of this page.
+#explain each key that appears in CCMP.
 
-= Introduction =
+= PMK =
 
-Add your content here.
+对于使用 RADIUS 服务器的 802.1X 身份验证，PMK 由无线客户端和 RADIUS 服务器（即AS）共同确定。
 
 
-= Details =
+= PTK =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+由PMK生产。
