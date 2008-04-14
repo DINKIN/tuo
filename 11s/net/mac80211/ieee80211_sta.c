@@ -3063,6 +3063,8 @@ void ieee80211_sta_work(struct work_struct *work)
 	struct ieee80211_if_sta *ifsta;
 	struct sk_buff *skb;
 
+	printk(KERN_INFO "Station Work\n");
+
 	if (!netif_running(dev))
 		return;
 
