@@ -6,8 +6,8 @@
 
 # Support AP.  (Scott)
 
-# Multi-Radio.  (Scott)
+#Multi-Radio.  (Scott)
 
-# Multi-Channel.  (Scott)
+#Multi-Channel.  (Scott)
 
-# QoS Support.  (Scott)
+#QoS Support.  (Scott)
