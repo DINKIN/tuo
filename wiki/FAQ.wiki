@@ -22,7 +22,7 @@
 
   * 相关技术比较
     # Mesh与Wifi的比较
-      Wifi的AP覆盖范围小，不支持多跳。
+    Wifi的AP覆盖范围小，不支持多跳。
     # Mesh与WiMax的比较
     # Mesh与3G的比较
     # Mesh的频率资源
