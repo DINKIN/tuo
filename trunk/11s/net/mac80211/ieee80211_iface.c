@@ -136,12 +136,15 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
 		sdata->u.vlan.ap = NULL;
 		break;
 	case IEEE80211_IF_TYPE_AP:
+		/*
 		sdata->u.ap.force_unicast_rateidx = -1;
 		sdata->u.ap.max_ratectrl_rateidx = -1;
 		skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
 		sdata->bss = &sdata->u.ap;
 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
-		break;
+		printk(KERN_INFO "init ap\n");
+		break; 
+		*/
 	case IEEE80211_IF_TYPE_MESH_POINT:
 	case IEEE80211_IF_TYPE_STA:
 	case IEEE80211_IF_TYPE_IBSS: {
@@ -227,6 +230,7 @@ void ieee80211_if_reinit(struct net_device *dev)
 			}
 		}
 
+		/*
 		beacon = sdata->u.ap.beacon;
 		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
 		synchronize_rcu();
@@ -236,6 +240,7 @@ void ieee80211_if_reinit(struct net_device *dev)
 			local->total_ps_buffered--;
 			dev_kfree_skb(skb);
 		}
+		*/
 
 		break;
 	}

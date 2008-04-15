@@ -1564,6 +1564,7 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
 
 	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
 	if ((sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+	     sdata->vif.type == IEEE80211_IF_TYPE_AP ||
 	     sdata->vif.type == IEEE80211_IF_TYPE_IBSS ||
 	     sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) &&
 	    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
@@ -1941,8 +1942,10 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
 	skb = rx.skb;
 
 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+		// printk(KERN_DEBUG "interface %s\n", sdata->dev->name);
 		if (!netif_running(sdata->dev))
 			continue;
+		// printk(KERN_DEBUG "running\n");
 
 		if (sdata->vif.type == IEEE80211_IF_TYPE_MNTR)
 			continue;
@@ -1979,11 +1982,13 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
 				       prev->dev->name);
 			continue;
 		}
+		// printk(KERN_DEBUG "interface %s receive a packet\n", prev->dev->name);
 		rx.fc = le16_to_cpu(hdr->frame_control);
 		ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
 		prev = sdata;
 	}
 	if (prev) {
+		// printk(KERN_DEBUG "interface %s receive a packet\n", prev->dev->name);
 		rx.fc = le16_to_cpu(hdr->frame_control);
 		ieee80211_invoke_rx_handlers(prev, &rx, skb);
 	} else

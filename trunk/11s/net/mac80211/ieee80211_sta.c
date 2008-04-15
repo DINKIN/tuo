@@ -512,7 +512,6 @@ void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
 	dev_queue_xmit(skb);
 }
 
-
 static void ieee80211_send_auth(struct net_device *dev,
 				struct ieee80211_if_sta *ifsta,
 				int transaction, u8 *extra, size_t extra_len,
@@ -2708,7 +2707,8 @@ static void ieee80211_rx_mgmt_probe_req(struct net_device *dev,
 	    ifsta->state != IEEE80211_IBSS_JOINED ||
 	    len < 24 + 2 || !ifsta->probe_resp)
 		return;
-
+	
+	printk(KERN_INFO "rx probe request\n");
 	if (local->ops->tx_last_beacon)
 		tx_last_beacon = local->ops->tx_last_beacon(local_to_hw(local));
 	else
@@ -2721,13 +2721,16 @@ static void ieee80211_rx_mgmt_probe_req(struct net_device *dev,
 	       print_mac(mac3, mgmt->bssid), tx_last_beacon);
 #endif /* CONFIG_MAC80211_IBSS_DEBUG */
 
+	printk(KERN_INFO "rx probe request\n");
 	if (!tx_last_beacon)
 		return;
 
+	printk(KERN_INFO "rx probe request\n");
 	if (memcmp(mgmt->bssid, ifsta->bssid, ETH_ALEN) != 0 &&
 	    memcmp(mgmt->bssid, "\xff\xff\xff\xff\xff\xff", ETH_ALEN) != 0)
 		return;
 
+	printk(KERN_INFO "rx probe request\n");
 	end = ((u8 *) mgmt) + len;
 	pos = mgmt->u.probe_req.variable;
 	if (pos[0] != WLAN_EID_SSID ||
@@ -2739,6 +2742,7 @@ static void ieee80211_rx_mgmt_probe_req(struct net_device *dev,
 		}
 		return;
 	}
+	printk(KERN_INFO "rx probe request\n");
 	if (pos[1] != 0 &&
 	    (pos[1] != ifsta->ssid_len ||
 	     memcmp(pos + 2, ifsta->ssid, ifsta->ssid_len) != 0)) {
@@ -2746,17 +2750,21 @@ static void ieee80211_rx_mgmt_probe_req(struct net_device *dev,
 		return;
 	}
 
+	printk(KERN_INFO "rx probe request\n");
 	/* Reply with ProbeResp */
 	skb = skb_copy(ifsta->probe_resp, GFP_KERNEL);
 	if (!skb)
 		return;
 
+	printk(KERN_INFO "rx probe request\n");
 	resp = (struct ieee80211_mgmt *) skb->data;
 	memcpy(resp->da, mgmt->sa, ETH_ALEN);
 #ifdef CONFIG_MAC80211_IBSS_DEBUG
 	printk(KERN_DEBUG "%s: Sending ProbeResp to %s\n",
 	       dev->name, print_mac(mac, resp->da));
 #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+	printk(KERN_INFO "%s: Sending ProbeResp to %s\n",
+	       dev->name, print_mac(mac, resp->da));
 	ieee80211_sta_tx(dev, skb, 0);
 }
 
@@ -3063,7 +3071,7 @@ void ieee80211_sta_work(struct work_struct *work)
 	struct ieee80211_if_sta *ifsta;
 	struct sk_buff *skb;
 
-	printk(KERN_INFO "Station Work\n");
+	/* printk(KERN_DEBUG "Station Work\n"); */
 
 	if (!netif_running(dev))
 		return;
@@ -3072,6 +3080,7 @@ void ieee80211_sta_work(struct work_struct *work)
 		return;
 
 	if (sdata->vif.type != IEEE80211_IF_TYPE_STA &&
+	    sdata->vif.type != IEEE80211_IF_TYPE_AP &&
 	    sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
 	    sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT) {
 		printk(KERN_DEBUG "%s: ieee80211_sta_work: non-STA interface "
