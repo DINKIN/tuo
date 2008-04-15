@@ -2083,6 +2083,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
 	struct ath5k_buf *bf = sc->bbuf;
 	struct ath5k_hw *ah = sc->ah;
 
+	printk(KERN_INFO "in beacon_send\n");
 	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "in beacon_send\n");
 
 	if (unlikely(bf->skb == NULL || sc->opmode == IEEE80211_IF_TYPE_STA ||
@@ -2257,10 +2258,12 @@ static void
 ath5k_beacon_config(struct ath5k_softc *sc)
 {
 	struct ath5k_hw *ah = sc->ah;
-
+	u_int32_t nexttbtt, intval;
+	
 	ath5k_hw_set_intr(ah, 0);
 	sc->bmisscount = 0;
 
+	
 	if (sc->opmode == IEEE80211_IF_TYPE_STA) {
 		sc->imask |= AR5K_INT_BMISS;
 	} else if (sc->opmode == IEEE80211_IF_TYPE_IBSS) {
@@ -2279,9 +2282,16 @@ ath5k_beacon_config(struct ath5k_softc *sc)
 			ath5k_beacon_send(sc);
 	} else if (sc->opmode == IEEE80211_IF_TYPE_AP) {
 	/* TODO else AP */
-		ath5k_beaconq_config(sc);
 
 		sc->imask |= AR5K_INT_SWBA;
+		ath5k_beaconq_config(sc);
+
+		intval = sc->bintval & AR5K_BEACON_PERIOD;
+		nexttbtt = intval;
+		intval |= AR5K_BEACON_RESET_TSF;
+		intval |= AR5K_BEACON_ENA;
+
+		ath5k_hw_init_beacon(ah, nexttbtt, intval);
 	}
 
 	ath5k_hw_set_intr(ah, sc->imask);
@@ -2465,6 +2475,7 @@ ath5k_intr(int irq, void *dev_id)
 		 * value to insure we only process bits we requested.
 		 */
 		ath5k_hw_get_isr(ah, &status);		/* NB: clears IRQ too */
+		// printk(KERN_INFO "status 0x%x/0x%x\n", status, sc->imask);
 		ATH5K_DBG(sc, ATH5K_DEBUG_INTR, "status 0x%x/0x%x\n",
 				status, sc->imask);
 		status &= sc->imask; /* discard unasked for bits */

@@ -166,6 +166,8 @@ static inline int identical_mac_addr_allowed(int type1, int type2)
 {
 	return (type1 == IEEE80211_IF_TYPE_MNTR ||
 		type2 == IEEE80211_IF_TYPE_MNTR ||
+		(type1 == IEEE80211_IF_TYPE_MESH_POINT &&
+		 type2 == IEEE80211_IF_TYPE_AP) ||
 		(type1 == IEEE80211_IF_TYPE_AP &&
 		 type2 == IEEE80211_IF_TYPE_WDS) ||
 		(type1 == IEEE80211_IF_TYPE_WDS &&
@@ -189,11 +191,14 @@ static int ieee80211_open(struct net_device *dev)
 
 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 
+	// printk(KERN_DEBUG "open dev %s \n", sdata->dev->name);
 	/* we hold the RTNL here so can safely walk the list */
 	list_for_each_entry(nsdata, &local->interfaces, list) {
 		struct net_device *ndev = nsdata->dev;
+		
 
 		if (ndev != dev && ndev != local->mdev && netif_running(ndev)) {
+			// printk(KERN_DEBUG "open sub dev %s \n", ndev->name);
 			/*
 			 * Allow only a single IBSS interface to be up at any
 			 * time. This is restricted because beacon distribution
@@ -450,15 +455,18 @@ static int ieee80211_stop(struct net_device *dev)
 		struct beacon_data *old_beacon = sdata->u.ap.beacon;
 
 		/* remove beacon */
+		/*
 		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
 		synchronize_rcu();
 		kfree(old_beacon);
+		*/
 
 		/* down all dependent devices, that is VLANs */
-		list_for_each_entry_safe(vlan, tmp, &sdata->u.ap.vlans,
+	/*	list_for_each_entry_safe(vlan, tmp, &sdata->u.ap.vlans,
 					 u.vlan.list)
 			dev_close(vlan->dev);
 		WARN_ON(!list_empty(&sdata->u.ap.vlans));
+		*/
 	}
 
 	local->open_count--;
@@ -494,6 +502,7 @@ static int ieee80211_stop(struct net_device *dev)
 		break;
 	case IEEE80211_IF_TYPE_MESH_POINT:
 	case IEEE80211_IF_TYPE_STA:
+	case IEEE80211_IF_TYPE_AP:
 	case IEEE80211_IF_TYPE_IBSS:
 		sdata->u.sta.state = IEEE80211_DISABLED;
 		del_timer_sync(&sdata->u.sta.timer);
@@ -1774,6 +1783,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
 		if (sdata->dev == local->mdev)
 			continue;
+		
 		list_del(&sdata->list);
 		__ieee80211_if_del(local, sdata);
 	}
