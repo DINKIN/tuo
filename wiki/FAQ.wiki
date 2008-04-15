@@ -6,7 +6,7 @@
     # Mesh与WiMax的比较
     # Mesh与3G的比较
     # Mesh的频率资源
-    # Mesh和11a, 11b, 11g, 11i, 11n, 11r, 11w的关系
+    # Mesh和11a, 11b, 11g, 11i, 11n, 11p, 11r, 11w的关系
 
   * 带宽和延时
     # MP和STA之间的带宽能达到多少？
