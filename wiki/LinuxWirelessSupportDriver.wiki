@@ -2,6 +2,8 @@
 
 = Introduction =
 
+Major chip set providers are Broadcom and Atheros.
+
 linux wireless support device list.
 
 [http://linuxwireless.org/en/users/Devices/]
