@@ -167,6 +167,8 @@ static inline int identical_mac_addr_allowed(int type1, int type2)
 	return (type1 == IEEE80211_IF_TYPE_MNTR ||
 		type2 == IEEE80211_IF_TYPE_MNTR ||
 		(type1 == IEEE80211_IF_TYPE_MESH_POINT &&
+		type2 == IEEE80211_IF_TYPE_STA) ||
+		(type1 == IEEE80211_IF_TYPE_MESH_POINT &&
 		type2 == IEEE80211_IF_TYPE_AP) ||
 		(type1 == IEEE80211_IF_TYPE_AP &&
 		 type2 == IEEE80211_IF_TYPE_WDS) ||
@@ -980,6 +982,7 @@ static int __ieee80211_if_config(struct net_device *dev,
 	if (!local->ops->config_interface || !netif_running(dev))
 		return 0;
 
+	printk(KERN_INFO "__ieee80211_if_config\n");
 	memset(&conf, 0, sizeof(conf));
 	conf.type = sdata->vif.type;
 	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
@@ -988,6 +991,7 @@ static int __ieee80211_if_config(struct net_device *dev,
 		conf.ssid = sdata->u.sta.ssid;
 		conf.ssid_len = sdata->u.sta.ssid_len;
 	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+	printk(KERN_INFO "__ieee80211_if_config mesh point\n");
 		conf.beacon = beacon;
 		ieee80211_start_mesh(dev);
 	} else if (sdata->vif.type == IEEE80211_IF_TYPE_AP) {
@@ -1004,6 +1008,8 @@ int ieee80211_if_config(struct net_device *dev)
 {
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+
+	printk(KERN_INFO "ieee80211_if_config\n");
 	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT &&
 	    (local->hw.flags & IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE))
 		return ieee80211_if_config_beacon(dev);
@@ -1017,6 +1023,7 @@ int ieee80211_if_config_beacon(struct net_device *dev)
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 	struct sk_buff *skb;
 
+	printk(KERN_INFO "ieee80211_if_config_beacon\n");
 	if (!(local->hw.flags & IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE))
 		return 0;
 	skb = ieee80211_beacon_get(local_to_hw(local), &sdata->vif,

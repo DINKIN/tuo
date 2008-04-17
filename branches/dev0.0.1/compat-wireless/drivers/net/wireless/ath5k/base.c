@@ -461,7 +461,8 @@ ath5k_pci_probe(struct pci_dev *pdev,
 
 	/* Initialize driver private data */
 	SET_IEEE80211_DEV(hw, &pdev->dev);
-	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS;
+	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE | 
+		IEEE80211_HW_RX_INCLUDES_FCS;
 	hw->extra_tx_headroom = 2;
 	hw->channel_change_time = 5000;
 	/* these names are misleading */
@@ -2086,6 +2087,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
 	struct ath5k_buf *bf = sc->bbuf;
 	struct ath5k_hw *ah = sc->ah;
 
+	printk(KERN_INFO "in beacon_send\n");
 	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "in beacon_send\n");
 
 	if (unlikely(bf->skb == NULL || sc->opmode == IEEE80211_IF_TYPE_STA ||
@@ -2093,6 +2095,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
 		ATH5K_WARN(sc, "bf=%p bf_skb=%p\n", bf, bf ? bf->skb : NULL);
 		return;
 	}
+	printk(KERN_INFO "1in beacon_send\n");
 	/*
 	 * Check if the previous beacon has gone out.  If
 	 * not don't don't try to post another, skip this
@@ -2262,6 +2265,7 @@ ath5k_beacon_config(struct ath5k_softc *sc)
 	struct ath5k_hw *ah = sc->ah;
 	u_int32_t nexttbtt, intval;
 
+	printk(KERN_INFO "beacon config\n");
 	ath5k_hw_set_intr(ah, 0);
 	sc->bmisscount = 0;
 
@@ -2281,8 +2285,11 @@ ath5k_beacon_config(struct ath5k_softc *sc)
 
 		if (ath5k_hw_hasveol(ah))
 			ath5k_beacon_send(sc);
-	} else if (sc->opmode == IEEE80211_IF_TYPE_AP) {
-	/* TODO else AP */
+	} else if (sc->opmode == IEEE80211_IF_TYPE_AP || 
+			sc->opmode == IEEE80211_IF_TYPE_MESH_POINT) {
+	/* TODO else AP & mesh point */
+		printk(KERN_INFO "beacon config for AP & MP : sc->bintval %d\n", sc->bintval);
+		// sc->imask &= ~AR5K_INT_BMISS;
 		sc->imask |= AR5K_INT_SWBA;
 		ath5k_beaconq_config(sc);
 
@@ -2475,6 +2482,7 @@ ath5k_intr(int irq, void *dev_id)
 		 * value to insure we only process bits we requested.
 		 */
 		ath5k_hw_get_isr(ah, &status);		/* NB: clears IRQ too */
+		printk(KERN_INFO "status 0x%x/0x%x\n", 	status, sc->imask);
 		ATH5K_DBG(sc, ATH5K_DEBUG_INTR, "status 0x%x/0x%x\n",
 				status, sc->imask);
 		status &= sc->imask; /* discard unasked for bits */
@@ -2712,6 +2720,7 @@ ath5k_reset(struct ieee80211_hw *hw)
 	struct ath5k_hw *ah = sc->ah;
 	int ret;
 
+	printk(KERN_INFO "resetting\n");
 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
 
 	ath5k_hw_set_intr(ah, 0);
@@ -2765,14 +2774,19 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
 	int ret;
 
 	mutex_lock(&sc->lock);
+	/*
+	 * only support one virtual interface per device
 	if (sc->vif) {
+	printk(KERN_INFO "add_interface : only support one virtual interface\n");
 		ret = 0;
 		goto end;
 	}
+	*/
 
 	sc->vif = conf->vif;
 
 	switch (conf->type) {
+	case IEEE80211_IF_TYPE_MESH_POINT:
 	case IEEE80211_IF_TYPE_AP:
 	case IEEE80211_IF_TYPE_STA:
 	case IEEE80211_IF_TYPE_IBSS:
@@ -2827,13 +2841,21 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	struct ath5k_hw *ah = sc->ah;
 	int ret;
 
+	printk(KERN_INFO "config_interface\n");
 	/* Set to a reasonable value. Note that this will
 	 * be set to mac80211's value at ath5k_config(). */
 	sc->bintval = 1000;
 	mutex_lock(&sc->lock);
+	/*
+	 * only support one virtual interface per device
 	if (sc->vif != vif) {
 		ret = -EIO;
 		goto unlock;
+	}
+	*/
+	printk(KERN_INFO "config_interface1\n");
+	if (conf->beacon) {
+		sc->bbuf->skb = conf->beacon;
 	}
 	if (conf->bssid) {
 		/* Cache for later use during resets */
