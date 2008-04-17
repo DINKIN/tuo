@@ -3205,6 +3205,7 @@ void ieee80211_sta_work(struct work_struct *work)
 		return;
 
 	if (sdata->vif.type != IEEE80211_IF_TYPE_STA &&
+	    sdata->vif.type != IEEE80211_IF_TYPE_AP &&
 	    sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
 	    sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT) {
 		printk(KERN_DEBUG "%s: ieee80211_sta_work: non-STA interface "

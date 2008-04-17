@@ -1562,6 +1562,7 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
 
 	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
 	if ((sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+	     sdata->vif.type == IEEE80211_IF_TYPE_AP ||
 	     sdata->vif.type == IEEE80211_IF_TYPE_IBSS ||
 	     sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) &&
 	    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
