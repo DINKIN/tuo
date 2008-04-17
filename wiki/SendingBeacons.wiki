@@ -1,13 +1,26 @@
 #In AP mode we enable the beacon timers and SWBA interrupts to prepare beacon frames.
 
-= Introduction =
+= MAC80211 =
 
-Add your content here.
+set the fallow flag in the driver initialization.
 
+local->hw.flags & IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE
 
-= Details =
+= Atheros Chipset =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+setting AP mode
+
+AR5K_STA_ID1 |= AR5K_STA_ID1_AP
+
+initialize beacon register
+
+AR5K_TIMER0
+AR5K_TIMER2
+AR5K_TIMER3
+AR5K_TIMER4
+
+AR5K_BEACON |= AR5K_BEACON_ENABLE [ | AR5K_BEACON_RESET_TSF ]
+
+enable SWBA
+
+AR5K_PIMR |= AR5K_INT_SWBA
