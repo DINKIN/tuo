@@ -48,6 +48,7 @@ int ieee80211_if_add(struct net_device *dev, const char *name,
 	struct ieee80211_sub_if_data *sdata = NULL;
 	int ret;
 
+	printk(KERN_INFO "if add \n");
 	ASSERT_RTNL();
 	ndev = alloc_netdev(sizeof(*sdata) + local->hw.vif_data_size,
 			    name, ieee80211_if_setup);

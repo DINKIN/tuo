@@ -1605,6 +1605,7 @@ enum ath5k_int ath5k_hw_set_intr(struct ath5k_hw *ah, enum ath5k_int new_mask)
 		}
 	}
 
+	printk(KERN_INFO "set intr AR5K_PIMR %x\n", int_mask);
 	ath5k_hw_reg_write(ah, int_mask, AR5K_PIMR);
 
 	/* Store new interrupt mask */
@@ -2213,6 +2214,7 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah)
 
 	ATH5K_TRACE(ah->ah_sc);
 
+	printk(KERN_INFO "hw_set_opmode\n");
 	switch (ah->ah_op_mode) {
 	case IEEE80211_IF_TYPE_IBSS:
 		pcu_reg |= AR5K_STA_ID1_ADHOC | AR5K_STA_ID1_DESC_ANTENNA |
@@ -2221,6 +2223,7 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah)
 		beacon_reg |= AR5K_BCR_ADHOC;
 		break;
 
+	case IEEE80211_IF_TYPE_MESH_POINT:
 	case IEEE80211_IF_TYPE_AP:
 		pcu_reg |= AR5K_STA_ID1_AP | AR5K_STA_ID1_RTS_DEF_ANTENNA |
 			(ah->ah_version == AR5K_AR5210 ?
@@ -2619,6 +2622,7 @@ void ath5k_hw_reset_tsf(struct ath5k_hw *ah)
 void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
 {
 	u32 timer1, timer2, timer3;
+	u32 reg;
 
 	ATH5K_TRACE(ah->ah_sc);
 	/*
@@ -2651,9 +2655,16 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
 	ath5k_hw_reg_write(ah, timer2, AR5K_TIMER2);
 	ath5k_hw_reg_write(ah, timer3, AR5K_TIMER3);
 
-	ath5k_hw_reg_write(ah, interval & (AR5K_BEACON_PERIOD |
-			AR5K_BEACON_RESET_TSF | AR5K_BEACON_ENABLE),
-		AR5K_BEACON);
+	printk(KERN_INFO "ah_version %x\n", ah->ah_version);
+	reg = interval & (AR5K_BEACON_PERIOD | AR5K_BEACON_RESET_TSF | AR5K_BEACON_ENABLE);
+	printk(KERN_INFO "AE5K_BEACON register %x\n", reg);
+	ath5k_hw_reg_write(ah, reg, AR5K_BEACON);
+	{
+		reg = ath5k_hw_reg_read(ah, AR5K_BEACON);
+		printk(KERN_INFO "AE5K_BEACON register %x\n", reg);
+		reg = ath5k_hw_reg_read(ah, AR5K_STA_ID1);
+		printk(KERN_INFO "AE5K_STA_ID1 register %x\n", reg);
+	}
 }
 
 #if 0
