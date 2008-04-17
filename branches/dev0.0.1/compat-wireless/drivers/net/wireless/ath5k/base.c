@@ -2260,6 +2260,7 @@ static void
 ath5k_beacon_config(struct ath5k_softc *sc)
 {
 	struct ath5k_hw *ah = sc->ah;
+	u_int32_t nexttbtt, intval;
 
 	ath5k_hw_set_intr(ah, 0);
 	sc->bmisscount = 0;
@@ -2280,8 +2281,18 @@ ath5k_beacon_config(struct ath5k_softc *sc)
 
 		if (ath5k_hw_hasveol(ah))
 			ath5k_beacon_send(sc);
-	}
+	} else if (sc->opmode == IEEE80211_IF_TYPE_AP) {
 	/* TODO else AP */
+		sc->imask |= AR5K_INT_SWBA;
+		ath5k_beaconq_config(sc);
+
+		intval = sc->bintval & AR5K_BEACON_PERIOD;
+		nexttbtt = intval;
+		intval |= AR5K_BEACON_RESET_TSF;
+		intval |= AR5K_BEACON_ENA;
+
+		ath5k_hw_init_beacon(ah, nexttbtt, intval);
+	}
 
 	ath5k_hw_set_intr(ah, sc->imask);
 }
@@ -2762,6 +2773,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
 	sc->vif = conf->vif;
 
 	switch (conf->type) {
+	case IEEE80211_IF_TYPE_AP:
 	case IEEE80211_IF_TYPE_STA:
 	case IEEE80211_IF_TYPE_IBSS:
 	case IEEE80211_IF_TYPE_MNTR:
