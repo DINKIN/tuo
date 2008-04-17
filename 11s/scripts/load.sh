@@ -9,7 +9,7 @@ MODULES="$MODULES rtl8180 rtl8187"
 MODULES="$MODULES rtl8180 rtl8187"
 MODULES="$MODULES rt2400pci rt2500pci rt61pci"
 MODULES="$MODULES rt2500usb rt73usb"
-MODULES="$MODULES rndis_wlan"
+MODULES="$MODULES rndis_wlan at76_usb"
 for i in $MODULES; do
 	echo Loading $i...
 	modprobe $i

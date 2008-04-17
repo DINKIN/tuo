@@ -17,7 +17,7 @@
 #include <net/mac80211.h>
 #include <net/cfg80211.h>
 #include "ieee80211_i.h"
-#include "ieee80211_rate.h"
+#include "rate.h"
 #include "debugfs.h"
 #include "debugfs_netdev.h"
 
@@ -31,11 +31,13 @@ static ssize_t ieee80211_if_read(
 	ssize_t ret = -EINVAL;
 
 	read_lock(&dev_base_lock);
-	if (sdata->dev->reg_state == NETREG_REGISTERED) {
+	if (sdata->dev->reg_state == NETREG_REGISTERED)
 		ret = (*format)(sdata, buf, sizeof(buf));
-		ret = simple_read_from_buffer(userbuf, count, ppos, buf, ret);
-	}
 	read_unlock(&dev_base_lock);
+
+	if (ret != -EINVAL)
+		ret = simple_read_from_buffer(userbuf, count, ppos, buf, ret);
+
 	return ret;
 }
 
@@ -51,13 +53,13 @@ static ssize_t ieee80211_if_write(
 
 	memset(buf, 0x00, sizeof(buf));
 	buf_size = min(count, (sizeof(buf)-1));
-	read_lock(&dev_base_lock);
 	if (copy_from_user(buf, userbuf, buf_size))
-		goto endwrite;
+		return count;
+	read_lock(&dev_base_lock);
 	if (sdata->dev->reg_state == NETREG_REGISTERED)
 		(*format)(sdata, buf);
-endwrite:
 	read_unlock(&dev_base_lock);
+
 	return count;
 }
 #endif
@@ -222,7 +224,7 @@ IEEE80211_IF_WFILE(dot11MeshConfirmTimeout,
 IEEE80211_IF_WFILE(dot11MeshHoldingTimeout,
 		u.sta.mshcfg.dot11MeshHoldingTimeout, DEC, u16);
 IEEE80211_IF_WFILE(dot11MeshTTL, u.sta.mshcfg.dot11MeshTTL, DEC, u8);
-IEEE80211_IF_WFILE(auto_open_plinks, u.sta.mshcfg.auto_open_plinks, DEC, bool);
+IEEE80211_IF_WFILE(auto_open_plinks, u.sta.mshcfg.auto_open_plinks, DEC, u8);
 IEEE80211_IF_WFILE(dot11MeshMaxPeerLinks,
 		u.sta.mshcfg.dot11MeshMaxPeerLinks, DEC, u16);
 IEEE80211_IF_WFILE(dot11MeshHWMPactivePathTimeout,
@@ -241,7 +243,7 @@ IEEE80211_IF_WFILE(min_discovery_timeout,
 
 
 #define DEBUGFS_ADD(name, type)\
-	sdata->debugfs.type.name = debugfs_create_file(#name, 0444,\
+	sdata->debugfs.type.name = debugfs_create_file(#name, 0400,\
 		sdata->debugfsdir, sdata, &name##_ops);
 
 static void add_sta_files(struct ieee80211_sub_if_data *sdata)
@@ -296,7 +298,7 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
 
 #ifdef CONFIG_MAC80211_MESH
 #define MESHSTATS_ADD(name)\
-	sdata->mesh_stats.name = debugfs_create_file(#name, 0444,\
+	sdata->mesh_stats.name = debugfs_create_file(#name, 0400,\
 		sdata->mesh_stats_dir, sdata, &name##_ops);
 
 static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
@@ -310,7 +312,7 @@ static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
 }
 
 #define MESHPARAMS_ADD(name)\
-	sdata->mesh_config.name = debugfs_create_file(#name, 0644,\
+	sdata->mesh_config.name = debugfs_create_file(#name, 0600,\
 		sdata->mesh_config_dir, sdata, &name##_ops);
 
 static void add_mesh_config(struct ieee80211_sub_if_data *sdata)

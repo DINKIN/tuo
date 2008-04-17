@@ -44,7 +44,7 @@
 /*
  * Module information.
  */
-#define DRV_VERSION	"2.1.3"
+#define DRV_VERSION	"2.1.4"
 #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
 
 /*
@@ -384,7 +384,8 @@ struct rt2x00_intf {
 	 */
 	unsigned int delayed_flags;
 #define DELAYED_UPDATE_BEACON		0x00000001
-#define DELAYED_CONFIG_PREAMBLE		0x00000002
+#define DELAYED_CONFIG_ERP		0x00000002
+#define DELAYED_LED_ASSOC		0x00000004
 };
 
 static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
@@ -441,13 +442,23 @@ struct rt2x00lib_conf {
 
 	enum ieee80211_band band;
 
-	int basic_rates;
-	int slot_time;
+	u32 basic_rates;
+	u32 slot_time;
 
 	short sifs;
 	short pifs;
 	short difs;
 	short eifs;
+};
+
+/*
+ * Configuration structure for erp settings.
+ */
+struct rt2x00lib_erp {
+	int short_preamble;
+
+	int ack_timeout;
+	int ack_consume_time;
 };
 
 /*
@@ -495,6 +506,7 @@ struct rt2x00lib_ops {
 	 */
 	int (*probe_hw) (struct rt2x00_dev *rt2x00dev);
 	char *(*get_firmware_name) (struct rt2x00_dev *rt2x00dev);
+	u16 (*get_firmware_crc) (void *data, const size_t len);
 	int (*load_firmware) (struct rt2x00_dev *rt2x00dev, void *data,
 			      const size_t len);
 
@@ -522,8 +534,6 @@ struct rt2x00lib_ops {
 			    struct link_qual *qual);
 	void (*reset_tuner) (struct rt2x00_dev *rt2x00dev);
 	void (*link_tuner) (struct rt2x00_dev *rt2x00dev);
-	void (*led_brightness) (struct led_classdev *led_cdev,
-				enum led_brightness brightness);
 
 	/*
 	 * TX control handlers
@@ -549,6 +559,8 @@ struct rt2x00lib_ops {
 	/*
 	 * Configuration handlers.
 	 */
+	void (*config_filter) (struct rt2x00_dev *rt2x00dev,
+			       const unsigned int filter_flags);
 	void (*config_intf) (struct rt2x00_dev *rt2x00dev,
 			     struct rt2x00_intf *intf,
 			     struct rt2x00intf_conf *conf,
@@ -557,10 +569,8 @@ struct rt2x00lib_ops {
 #define CONFIG_UPDATE_MAC		( 1 << 2 )
 #define CONFIG_UPDATE_BSSID		( 1 << 3 )
 
-	int (*config_preamble) (struct rt2x00_dev *rt2x00dev,
-				const int short_preamble,
-				const int ack_timeout,
-				const int ack_consume_time);
+	void (*config_erp) (struct rt2x00_dev *rt2x00dev,
+			    struct rt2x00lib_erp *erp);
 	void (*config) (struct rt2x00_dev *rt2x00dev,
 			struct rt2x00lib_conf *libconf,
 			const unsigned int flags);
@@ -613,10 +623,9 @@ enum rt2x00_flags {
 	 */
 	DRIVER_SUPPORT_MIXED_INTERFACES,
 	DRIVER_REQUIRE_FIRMWARE,
-	DRIVER_REQUIRE_FIRMWARE_CRC_ITU_T,
-	DRIVER_REQUIRE_FIRMWARE_CCITT,
 	DRIVER_REQUIRE_BEACON_GUARD,
 	DRIVER_REQUIRE_ATIM_QUEUE,
+	DRIVER_REQUIRE_SCHEDULED,
 
 	/*
 	 * Driver configuration
@@ -664,6 +673,9 @@ struct rt2x00_dev {
 	 * This will only be compiled in when required.
 	 */
 #ifdef CONFIG_RT2X00_LIB_RFKILL
+	unsigned long rfkill_state;
+#define RFKILL_STATE_ALLOCATED		1
+#define RFKILL_STATE_REGISTERED		2
 	struct rfkill *rfkill;
 	struct input_polled_dev *poll_dev;
 #endif /* CONFIG_RT2X00_LIB_RFKILL */
@@ -681,8 +693,6 @@ struct rt2x00_dev {
 	 * by mac8011 or the kernel.
 	 */
 #ifdef CONFIG_RT2X00_LIB_LEDS
-	unsigned int led_flags;
-	struct rt2x00_trigger trigger_qual;
 	struct rt2x00_led led_radio;
 	struct rt2x00_led led_assoc;
 	struct rt2x00_led led_qual;
@@ -977,6 +987,10 @@ int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
 int rt2x00mac_config_interface(struct ieee80211_hw *hw,
 			       struct ieee80211_vif *vif,
 			       struct ieee80211_if_conf *conf);
+void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
+				unsigned int changed_flags,
+				unsigned int *total_flags,
+				int mc_count, struct dev_addr_list *mc_list);
 int rt2x00mac_get_stats(struct ieee80211_hw *hw,
 			struct ieee80211_low_level_stats *stats);
 int rt2x00mac_get_tx_stats(struct ieee80211_hw *hw,

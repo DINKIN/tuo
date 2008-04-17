@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2003 - 2007 Intel Corporation. All rights reserved.
+ * Copyright(c) 2003 - 2008 Intel Corporation. All rights reserved.
  *
  * Portions of this file are derived from the ipw3945 project, as well
  * as portions of the ieee80211 subsystem header files.
@@ -93,7 +93,7 @@ int iwl3945_param_queues_num = IWL_MAX_NUM_QUEUES; /* def: 8 Tx queues */
 #endif
 
 #define IWLWIFI_VERSION "1.2.26k" VD VS
-#define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+#define DRV_COPYRIGHT	"Copyright(c) 2003-2008 Intel Corporation"
 #define DRV_VERSION     IWLWIFI_VERSION
 
 
@@ -733,17 +733,17 @@ static int iwl3945_send_cmd_sync(struct iwl3945_priv *priv, struct iwl3945_host_
 {
 	int cmd_idx;
 	int ret;
-	static atomic_t entry = ATOMIC_INIT(0); /* reentrance protection */
 
 	BUG_ON(cmd->meta.flags & CMD_ASYNC);
 
 	 /* A synchronous command can not have a callback set. */
 	BUG_ON(cmd->meta.u.callback != NULL);
 
-	if (atomic_xchg(&entry, 1)) {
+	if (test_and_set_bit(STATUS_HCMD_SYNC_ACTIVE, &priv->status)) {
 		IWL_ERROR("Error sending %s: Already sending a host command\n",
 			  get_cmd_string(cmd->id));
-		return -EBUSY;
+		ret = -EBUSY;
+		goto out;
 	}
 
 	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
@@ -813,7 +813,7 @@ fail:
 		cmd->meta.u.skb = NULL;
 	}
 out:
-	atomic_set(&entry, 0);
+	clear_bit(STATUS_HCMD_SYNC_ACTIVE, &priv->status);
 	return ret;
 }
 
@@ -2058,6 +2058,8 @@ int iwl3945_is_network_packet(struct iwl3945_priv *priv, struct ieee80211_hdr *h
 			return !compare_ether_addr(header->addr2, priv->bssid);
 		/* packets to our adapter go through */
 		return !compare_ether_addr(header->addr1, priv->mac_addr);
+	default:
+		return 1;
 	}
 
 	return 1;
@@ -2302,6 +2304,9 @@ static void iwl3945_connection_init_rx_config(struct iwl3945_priv *priv)
 		priv->staging_rxon.filter_flags = RXON_FILTER_PROMISC_MSK |
 		    RXON_FILTER_CTL2HOST_MSK | RXON_FILTER_ACCEPT_GRP_MSK;
 		break;
+	default:
+		IWL_ERROR("Unsupported interface type %d\n", priv->iw_mode);
+		break;
 	}
 
 #if 0
@@ -2481,8 +2486,12 @@ static void iwl3945_build_tx_cmd_basic(struct iwl3945_priv *priv,
 			cmd->cmd.tx.timeout.pm_frame_timeout = cpu_to_le16(3);
 		else
 			cmd->cmd.tx.timeout.pm_frame_timeout = cpu_to_le16(2);
-	} else
+	} else {
 		cmd->cmd.tx.timeout.pm_frame_timeout = 0;
+#ifdef CONFIG_IWL3945_LEDS
+		priv->rxtxpackets += le16_to_cpu(cmd->cmd.tx.len);
+#endif
+	}
 
 	cmd->cmd.tx.driver_txop = 0;
 	cmd->cmd.tx.tx_flags = tx_flags;
@@ -4144,6 +4153,16 @@ static void iwl3945_enable_interrupts(struct iwl3945_priv *priv)
 	iwl3945_write32(priv, CSR_INT_MASK, CSR_INI_SET_MASK);
 }
 
+
+/* call this function to flush any scheduled tasklet */
+static inline void iwl_synchronize_irq(struct iwl3945_priv *priv)
+{
+	/* wait to make sure we flush pedding tasklet*/
+	synchronize_irq(priv->pci_dev->irq);
+	tasklet_kill(&priv->irq_tasklet);
+}
+
+
 static inline void iwl3945_disable_interrupts(struct iwl3945_priv *priv)
 {
 	clear_bit(STATUS_INT_ENABLED, &priv->status);
@@ -4543,7 +4562,9 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
 	}
 
 	/* Re-enable all interrupts */
-	iwl3945_enable_interrupts(priv);
+	/* only Re-enable if disabled by irq */
+	if (test_bit(STATUS_INT_ENABLED, &priv->status))
+		iwl3945_enable_interrupts(priv);
 
 #ifdef CONFIG_IWL3945_DEBUG
 	if (iwl3945_debug_level & (IWL_DL_ISR)) {
@@ -4607,7 +4628,9 @@ unplugged:
 
  none:
 	/* re-enable interrupts here since we don't have anything to service. */
-	iwl3945_enable_interrupts(priv);
+	/* only Re-enable if disabled by irq */
+	if (test_bit(STATUS_INT_ENABLED, &priv->status))
+		iwl3945_enable_interrupts(priv);
 	spin_unlock(&priv->lock);
 	return IRQ_NONE;
 }
@@ -4942,6 +4965,9 @@ static int iwl3945_get_channels_for_scan(struct iwl3945_priv *priv,
 	passive_dwell = iwl3945_get_passive_dwell_time(priv, band);
 
 	for (i = 0, added = 0; i < sband->n_channels; i++) {
+		if (channels[i].flags & IEEE80211_CHAN_DISABLED)
+			continue;
+
 		if (channels[i].hw_value ==
 		    le16_to_cpu(priv->active_rxon.channel)) {
 			if (iwl3945_is_associated(priv)) {
@@ -5136,8 +5162,12 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
 	       priv->bands[IEEE80211_BAND_2GHZ].n_channels,
 	       priv->bands[IEEE80211_BAND_5GHZ].n_channels);
 
-	priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->bands[IEEE80211_BAND_2GHZ];
-	priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &priv->bands[IEEE80211_BAND_5GHZ];
+	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
+		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+			&priv->bands[IEEE80211_BAND_2GHZ];
+	if (priv->bands[IEEE80211_BAND_5GHZ].n_channels)
+		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+			&priv->bands[IEEE80211_BAND_5GHZ];
 
 	set_bit(STATUS_GEO_CONFIGURED, &priv->status);
 
@@ -5844,16 +5874,19 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
 
 	/* At this point, the NIC is initialized and operational */
 	priv->notif_missed_beacons = 0;
-	set_bit(STATUS_READY, &priv->status);
 
 	iwl3945_reg_txpower_periodic(priv);
 
+	iwl3945_led_register(priv);
+
 	IWL_DEBUG_INFO("ALIVE processing complete.\n");
+	set_bit(STATUS_READY, &priv->status);
 	wake_up_interruptible(&priv->wait_command_queue);
 
 	if (priv->error_recovering)
 		iwl3945_error_recovery(priv);
 
+	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
 	return;
 
  restart:
@@ -5875,6 +5908,7 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
 	if (!exit_pending)
 		set_bit(STATUS_EXIT_PENDING, &priv->status);
 
+	iwl3945_led_unregister(priv);
 	iwl3945_clear_stations_table(priv);
 
 	/* Unblock any waiting calls */
@@ -5889,7 +5923,10 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
 	iwl3945_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
 
 	/* tell the device to stop sending interrupts */
+	spin_lock_irqsave(&priv->lock, flags);
 	iwl3945_disable_interrupts(priv);
+	spin_unlock_irqrestore(&priv->lock, flags);
+	iwl_synchronize_irq(priv);
 
 	if (priv->mac80211_registered)
 		ieee80211_stop_queues(priv->hw);
@@ -6309,18 +6346,23 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR)
 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
 
-	if (direct_mask)
+	if (direct_mask) {
 		IWL_DEBUG_SCAN
 		    ("Initiating direct scan for %s.\n",
 		     iwl3945_escape_essid(priv->essid, priv->essid_len));
-	else
+		scan->channel_count =
+			iwl3945_get_channels_for_scan(
+				priv, band, 1, /* active */
+				direct_mask,
+				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
+	} else {
 		IWL_DEBUG_SCAN("Initiating indirect scan.\n");
-
-	scan->channel_count =
-		iwl3945_get_channels_for_scan(
-			priv, band, 1, /* active */
-			direct_mask,
-			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
+		scan->channel_count =
+			iwl3945_get_channels_for_scan(
+				priv, band, 0, /* passive */
+				direct_mask,
+				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
+	}
 
 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
 	    scan->channel_count * sizeof(struct iwl3945_scan_channel);
@@ -7922,6 +7964,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
 	struct ieee80211_hw *hw;
 	struct iwl_3945_cfg *cfg = (struct iwl_3945_cfg *)(ent->driver_data);
 	int i;
+	unsigned long flags;
 	DECLARE_MAC_BUF(mac);
 
 	/* Disabling hardware scan means that mac80211 will perform scans
@@ -8072,7 +8115,9 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
 	priv->power_mode = IWL_POWER_AC;
 	priv->user_txpower_limit = IWL_DEFAULT_TX_POWER;
 
+	spin_lock_irqsave(&priv->lock, flags);
 	iwl3945_disable_interrupts(priv);
+	spin_unlock_irqrestore(&priv->lock, flags);
 
 	err = sysfs_create_group(&pdev->dev.kobj, &iwl3945_attribute_group);
 	if (err) {
@@ -8115,7 +8160,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
 		goto out_free_channel_map;
 	}
 
-	iwl3945_rate_control_register(priv->hw);
 	err = ieee80211_register_hw(priv->hw);
 	if (err) {
 		IWL_ERROR("Failed to register network device (error %d)\n", err);
@@ -8154,11 +8198,12 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
 	return err;
 }
 
-static void iwl3945_pci_remove(struct pci_dev *pdev)
+static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
 {
 	struct iwl3945_priv *priv = pci_get_drvdata(pdev);
 	struct list_head *p, *q;
 	int i;
+	unsigned long flags;
 
 	if (!priv)
 		return;
@@ -8168,6 +8213,15 @@ static void iwl3945_pci_remove(struct pci_dev *pdev)
 	set_bit(STATUS_EXIT_PENDING, &priv->status);
 
 	iwl3945_down(priv);
+
+	/* make sure we flush any pending irq or
+	 * tasklet for the driver
+	 */
+	spin_lock_irqsave(&priv->lock, flags);
+	iwl3945_disable_interrupts(priv);
+	spin_unlock_irqrestore(&priv->lock, flags);
+
+	iwl_synchronize_irq(priv);
 
 	/* Free MAC hash list for ADHOC */
 	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
@@ -8190,7 +8244,6 @@ static void iwl3945_pci_remove(struct pci_dev *pdev)
 
 	if (priv->mac80211_registered) {
 		ieee80211_unregister_hw(priv->hw);
-		iwl3945_rate_control_unregister(priv->hw);
 	}
 
 	/*netif_stop_queue(dev); */
@@ -8271,20 +8324,34 @@ static int __init iwl3945_init(void)
 	int ret;
 	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", " DRV_VERSION "\n");
 	printk(KERN_INFO DRV_NAME ": " DRV_COPYRIGHT "\n");
+
+	ret = iwl3945_rate_control_register();
+	if (ret) {
+		IWL_ERROR("Unable to register rate control algorithm: %d\n", ret);
+		return ret;
+	}
+
 	ret = pci_register_driver(&iwl3945_driver);
 	if (ret) {
 		IWL_ERROR("Unable to initialize PCI module\n");
-		return ret;
+		goto error_register;
 	}
 #ifdef CONFIG_IWL3945_DEBUG
 	ret = driver_create_file(&iwl3945_driver.driver, &driver_attr_debug_level);
 	if (ret) {
 		IWL_ERROR("Unable to create driver sysfs file\n");
-		pci_unregister_driver(&iwl3945_driver);
-		return ret;
+		goto error_debug;
 	}
 #endif
 
+	return ret;
+
+#ifdef CONFIG_IWL3945_DEBUG
+error_debug:
+	pci_unregister_driver(&iwl3945_driver);
+#endif
+error_register:
+	iwl3945_rate_control_unregister();
 	return ret;
 }
 
@@ -8294,6 +8361,7 @@ static void __exit iwl3945_exit(void)
 	driver_remove_file(&iwl3945_driver.driver, &driver_attr_debug_level);
 #endif
 	pci_unregister_driver(&iwl3945_driver);
+	iwl3945_rate_control_unregister();
 }
 
 module_param_named(antenna, iwl3945_param_antenna, int, 0444);

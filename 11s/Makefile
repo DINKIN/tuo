@@ -74,7 +74,7 @@ install: uninstall modules
 		echo Running athenable ath5k...;\
 		/usr/sbin/athenable ath5k ;\
 	fi
-	@depmod -ae
+	@/sbin/depmod -ae
 	@echo
 	@echo "Currently detected wireless subsystem modules:"
 	@echo 
@@ -82,6 +82,7 @@ install: uninstall modules
 	@# rc80211_simple is a module only on 2.6.22 and 2.6.23
 	@$(MODPROBE) -l cfg80211
 	@$(MODPROBE) -l adm8211
+	@$(MODPROBE) -l at76_usb
 	@$(MODPROBE) -l ath5k
 	@$(MODPROBE) -l b43
 	@$(MODPROBE) -l b43legacy
@@ -125,7 +126,7 @@ uninstall:
 	@# Lets only remove the stuff we are sure we are providing
 	@# on the misc directory.
 	@rm -f $(KLIB)/$(KMODDIR)/drivers/misc/eeprom_93cx6.ko
-	@depmod -ae
+	@/sbin/depmod -ae
 	@if [ -x /usr/sbin/athenable ]; then /usr/sbin/athenable madwifi; fi
 	@if [ -x /usr/sbin/b43enable ]; then /usr/sbin/b43enable bcm43xx; fi
 	@echo
@@ -136,6 +137,7 @@ uninstall:
 	@# rc80211_simple is a module on 2.6.22 and 2.6.23 though
 	@$(MODPROBE) -l adm8211
 	@$(MODPROBE) -l ath5k
+	@$(MODPROBE) -l at76_usb
 	@$(MODPROBE) -l b43
 	@$(MODPROBE) -l b43legacy
 	@$(MODPROBE) -l ssb

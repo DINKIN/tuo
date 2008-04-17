@@ -19,7 +19,7 @@
 #include <net/ieee80211_radiotap.h>
 
 #include "ieee80211_i.h"
-#include "ieee80211_led.h"
+#include "led.h"
 #include "mesh.h"
 #include "wep.h"
 #include "wpa.h"
@@ -438,7 +438,7 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
 		}
 
 	 } else if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
-		    is_broadcast_ether_addr(hdr->addr1) &&
+		    is_multicast_ether_addr(hdr->addr1) &&
 		    mesh_rmc_check(hdr->addr4, msh_h_get(hdr, hdrlen), rx->dev))
 		return RX_DROP_MONITOR;
 #undef msh_h_get
@@ -1082,12 +1082,9 @@ ieee80211_drop_unencrypted(struct ieee80211_rx_data *rx)
 	if (unlikely(!(rx->fc & IEEE80211_FCTL_PROTECTED) &&
 		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
 		     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_NULLFUNC &&
-		     (rx->key || rx->sdata->drop_unencrypted))) {
-		if (net_ratelimit())
-			printk(KERN_DEBUG "%s: RX non-WEP frame, but expected "
-			       "encryption\n", rx->dev->name);
+		     (rx->key || rx->sdata->drop_unencrypted)))
 		return -EACCES;
-	}
+
 	return 0;
 }
 
@@ -1529,9 +1526,10 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
 		if (!rx->sta)
 			return RX_CONTINUE;
 		tid = le16_to_cpu(bar->control) >> 12;
-		tid_agg_rx = &(rx->sta->ampdu_mlme.tid_rx[tid]);
-		if (tid_agg_rx->state != HT_AGG_STATE_OPERATIONAL)
+		if (rx->sta->ampdu_mlme.tid_state_rx[tid]
+					!= HT_AGG_STATE_OPERATIONAL)
 			return RX_CONTINUE;
+		tid_agg_rx = rx->sta->ampdu_mlme.tid_rx[tid];
 
 		start_seq_num = le16_to_cpu(bar->start_seq_num) >> 4;
 
@@ -1564,7 +1562,6 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
 
 	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
 	if ((sdata->vif.type == IEEE80211_IF_TYPE_STA ||
-	     sdata->vif.type == IEEE80211_IF_TYPE_AP ||
 	     sdata->vif.type == IEEE80211_IF_TYPE_IBSS ||
 	     sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) &&
 	    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
@@ -1942,10 +1939,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
 	skb = rx.skb;
 
 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-		// printk(KERN_DEBUG "interface %s\n", sdata->dev->name);
 		if (!netif_running(sdata->dev))
 			continue;
-		// printk(KERN_DEBUG "running\n");
 
 		if (sdata->vif.type == IEEE80211_IF_TYPE_MNTR)
 			continue;
@@ -1982,13 +1977,11 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
 				       prev->dev->name);
 			continue;
 		}
-		// printk(KERN_DEBUG "interface %s receive a packet\n", prev->dev->name);
 		rx.fc = le16_to_cpu(hdr->frame_control);
 		ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
 		prev = sdata;
 	}
 	if (prev) {
-		// printk(KERN_DEBUG "interface %s receive a packet\n", prev->dev->name);
 		rx.fc = le16_to_cpu(hdr->frame_control);
 		ieee80211_invoke_rx_handlers(prev, &rx, skb);
 	} else
@@ -2148,10 +2141,11 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
 
 	qc = skb->data + ieee80211_get_hdrlen(fc) - QOS_CONTROL_LEN;
 	tid = qc[0] & QOS_CONTROL_TID_MASK;
-	tid_agg_rx = &(sta->ampdu_mlme.tid_rx[tid]);
 
-	if (tid_agg_rx->state != HT_AGG_STATE_OPERATIONAL)
+	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL)
 		goto end_reorder;
+
+	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
 
 	/* null data frames are excluded */
 	if (unlikely(fc & IEEE80211_STYPE_NULLFUNC))

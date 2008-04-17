@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2003 - 2007 Intel Corporation. All rights reserved.
+ * Copyright(c) 2003 - 2008 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -358,6 +358,8 @@ void iwl3945_hw_rx_statistics(struct iwl3945_priv *priv, struct iwl3945_rx_mem_b
 
 	memcpy(&priv->statistics, pkt->u.raw, sizeof(priv->statistics));
 
+	iwl3945_led_background(priv);
+
 	priv->last_statistics_time = jiffies;
 }
 
@@ -522,7 +524,7 @@ static void iwl3945_add_radiotap(struct iwl3945_priv *priv,
 	s8 noise = 0;
 	int rate = stats->rate_idx;
 	u64 tsf = stats->mactime;
-	__le16 phy_flags_hw = rx_hdr->phy_flags;
+	__le16 phy_flags_hw = rx_hdr->phy_flags, antenna;
 
 	struct iwl3945_rt_rx_hdr {
 		struct ieee80211_radiotap_header rt_hdr;
@@ -594,8 +596,8 @@ static void iwl3945_add_radiotap(struct iwl3945_priv *priv,
 		iwl3945_rt->rt_rate = iwl3945_rates[rate].ieee;
 
 	/* antenna number */
-	iwl3945_rt->rt_antenna =
-		le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
+	antenna = phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK;
+	iwl3945_rt->rt_antenna = le16_to_cpu(antenna) >> 4;
 
 	/* set the preamble flag if we have it */
 	if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
@@ -640,6 +642,10 @@ static void iwl3945_handle_data_packet(struct iwl3945_priv *priv, int is_data,
 	if (priv->add_radiotap)
 		iwl3945_add_radiotap(priv, rxb->skb, rx_hdr, stats);
 
+#ifdef CONFIG_IWL3945_LEDS
+	if (is_data)
+		priv->rxtxpackets += len;
+#endif
 	ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
 	rxb->skb = NULL;
 }
@@ -663,12 +669,12 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv *priv,
 	rx_status.antenna = 0;
 	rx_status.flag = 0;
 	rx_status.mactime = le64_to_cpu(rx_end->timestamp);
-	rx_status.freq = ieee80211chan2mhz(le16_to_cpu(rx_hdr->channel));
+	rx_status.freq =
+		ieee80211_frequency_to_channel(le16_to_cpu(rx_hdr->channel));
 	rx_status.band = (rx_hdr->phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK) ?
 				IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
 
 	rx_status.rate_idx = iwl3945_hwrate_to_plcp_idx(rx_hdr->rate);
-
 	if (rx_status.band == IEEE80211_BAND_5GHZ)
 		rx_status.rate_idx -= IWL_FIRST_OFDM_RATE;
 
@@ -980,7 +986,7 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl3945_priv *priv,
 	priv->stations[sta_id].current_rate.rate_n_flags = rate;
 
 	if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
-	    (sta_id != IWL3945_BROADCAST_ID) &&
+	    (sta_id != priv->hw_setting.bcast_sta_id) &&
 		(sta_id != IWL_MULTICAST_ID))
 		priv->stations[IWL_STA_ID].current_rate.rate_n_flags = rate;
 
@@ -2595,7 +2601,7 @@ unsigned int iwl3945_hw_get_beacon_cmd(struct iwl3945_priv *priv,
 	tx_beacon_cmd = (struct iwl3945_tx_beacon_cmd *)&frame->u;
 	memset(tx_beacon_cmd, 0, sizeof(*tx_beacon_cmd));
 
-	tx_beacon_cmd->tx.sta_id = IWL3945_BROADCAST_ID;
+	tx_beacon_cmd->tx.sta_id = priv->hw_setting.bcast_sta_id;
 	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
 
 	frame_size = iwl3945_fill_beacon_frame(priv,

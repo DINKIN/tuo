@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2003 - 2007 Intel Corporation. All rights reserved.
+ * Copyright(c) 2003 - 2008 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -44,6 +44,7 @@ extern struct pci_device_id iwl3945_hw_card_ids[];
 #include "iwl-prph.h"
 #include "iwl-3945-hw.h"
 #include "iwl-3945-debug.h"
+#include "iwl-3945-led.h"
 
 /* Change firmware file name, using "-" and incrementing number,
  *   *only* when uCode interface or architecture changes so that it
@@ -279,8 +280,8 @@ struct iwl3945_frame {
 
 #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
 #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
-#define SEQ_TO_INDEX(x) (x & 0xff)
-#define INDEX_TO_SEQ(x) (x & 0xff)
+#define SEQ_TO_INDEX(x) ((u8)(x & 0xff))
+#define INDEX_TO_SEQ(x) ((u8)(x & 0xff))
 #define SEQ_HUGE_FRAME  (0x4000)
 #define SEQ_RX_FRAME    __constant_cpu_to_le16(0x8000)
 #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
@@ -400,23 +401,24 @@ struct iwl3945_rx_queue {
 #define MIN_B_CHANNELS  1
 
 #define STATUS_HCMD_ACTIVE	0	/* host command in progress */
-#define STATUS_INT_ENABLED	1
-#define STATUS_RF_KILL_HW	2
-#define STATUS_RF_KILL_SW	3
-#define STATUS_INIT		4
-#define STATUS_ALIVE		5
-#define STATUS_READY		6
-#define STATUS_TEMPERATURE	7
-#define STATUS_GEO_CONFIGURED	8
-#define STATUS_EXIT_PENDING	9
-#define STATUS_IN_SUSPEND	10
-#define STATUS_STATISTICS	11
-#define STATUS_SCANNING		12
-#define STATUS_SCAN_ABORTING	13
-#define STATUS_SCAN_HW		14
-#define STATUS_POWER_PMI	15
-#define STATUS_FW_ERROR		16
-#define STATUS_CONF_PENDING	17
+#define STATUS_HCMD_SYNC_ACTIVE	1	/* sync host command in progress */
+#define STATUS_INT_ENABLED	2
+#define STATUS_RF_KILL_HW	3
+#define STATUS_RF_KILL_SW	4
+#define STATUS_INIT		5
+#define STATUS_ALIVE		6
+#define STATUS_READY		7
+#define STATUS_TEMPERATURE	8
+#define STATUS_GEO_CONFIGURED	9
+#define STATUS_EXIT_PENDING	10
+#define STATUS_IN_SUSPEND	11
+#define STATUS_STATISTICS	12
+#define STATUS_SCANNING		13
+#define STATUS_SCAN_ABORTING	14
+#define STATUS_SCAN_HW		15
+#define STATUS_POWER_PMI	16
+#define STATUS_FW_ERROR		17
+#define STATUS_CONF_PENDING	18
 
 #define MAX_TID_COUNT        9
 
@@ -777,12 +779,14 @@ struct iwl3945_priv {
 	struct iwl3945_init_alive_resp card_alive_init;
 	struct iwl3945_alive_resp card_alive;
 
-#ifdef LED
-	/* LED related variables */
-	struct iwl3945_activity_blink activity;
-	unsigned long led_packets;
-	int led_state;
+#ifdef CONFIG_IWL3945_LEDS
+	struct iwl3945_led led[IWL_LED_TRG_MAX];
+	unsigned long last_blink_time;
+	u8 last_blink_rate;
+	u8 allow_blinking;
+	unsigned int rxtxpackets;
 #endif
+
 
 	u16 active_rate;
 	u16 active_rate_basic;
@@ -827,7 +831,7 @@ struct iwl3945_priv {
 	struct iwl3945_station_entry stations[IWL_STATION_COUNT];
 
 	/* Indication if ieee80211_ops->open has been called */
-	int is_open;
+	u8 is_open;
 
 	u8 mac80211_registered;
 
@@ -848,7 +852,7 @@ struct iwl3945_priv {
 	/* eeprom */
 	struct iwl3945_eeprom eeprom;
 
-	int iw_mode;
+	enum ieee80211_if_types iw_mode;
 
 	struct sk_buff *ibss_beacon;
 

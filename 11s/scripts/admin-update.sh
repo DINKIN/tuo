@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+# Copyright 2007, 2008	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 #
 # Use this to update compat-wireless-2.6 to the latest
 # wireless-testing.git tree you have.
@@ -55,6 +55,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi"
 DRIVERS="$DRIVERS drivers/net/wireless/rt2x00"
 DRIVERS="$DRIVERS drivers/net/wireless/zd1211rw"
 DRIVERS="$DRIVERS drivers/net/wireless/libertas"
+DRIVERS="$DRIVERS drivers/net/wireless/p54"
 
 # Drivers that belong the the wireless directory
 DRIVER_FILES="rtl818x.h rtl8180_sa2400.h rtl8180_max2820.h"
@@ -66,12 +67,10 @@ DRIVER_FILES="$DRIVER_FILES rtl8187.h rtl8187_rtl8225.h"
 DRIVER_FILES="$DRIVER_FILES rtl8180_grf5101.c rtl8180_grf5101.h"
 DRIVER_FILES="$DRIVER_FILES rtl8187_dev.c rtl8187_rtl8225.c"
 DRIVER_FILES="$DRIVER_FILES adm8211.c  adm8211.h"
-DRIVER_FILES="$DRIVER_FILES p54.h p54common.h p54common.c net2280.h"
-DRIVER_FILES="$DRIVER_FILES p54pci.h p54pci.c"
-DRIVER_FILES="$DRIVER_FILES p54usb.h p54usb.c"
 DRIVER_FILES="$DRIVER_FILES ipw2100.h ipw2100.c"
 DRIVER_FILES="$DRIVER_FILES ipw2200.h ipw2200.c"
 DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
+DRIVER_FILES="$DRIVER_FILES at76_usb.h at76_usb.c"
 
 mkdir -p include/linux/ include/net/ include/linux/usb \
 	net/mac80211/ net/wireless/ net/ieee80211/ \

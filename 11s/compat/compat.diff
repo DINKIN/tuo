@@ -8,32 +8,6 @@
  
  /*
   * 802.11 configuration in-kernel interface
---- a/net/mac80211/tx.c	2008-02-28 19:54:52.000000000 +0100
-+++ b/net/mac80211/tx.c	2008-02-28 19:55:23.000000000 +0100
-@@ -18,7 +18,9 @@
- #include <linux/etherdevice.h>
- #include <linux/bitmap.h>
- #include <linux/rcupdate.h>
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
- #include <net/net_namespace.h>
-+#endif
- #include <net/ieee80211_radiotap.h>
- #include <net/cfg80211.h>
- #include <net/mac80211.h>
-@@ -1617,8 +1619,13 @@ int ieee80211_subif_start_xmit(struct sk
- 		pkt_data->flags |= IEEE80211_TXPD_EAPOL_FRAME;
- 
- 	skb->dev = local->mdev;
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+	sdata->stats.tx_packets++;
-+	sdata->stats.tx_bytes += skb->len;
-+#else
- 	dev->stats.tx_packets++;
- 	dev->stats.tx_bytes += skb->len;
-+#endif
- 
- 	/* Update skb pointers to various headers since this modified frame
- 	 * is going to go through Linux networking code that may potentially
 --- a/net/wireless/sysfs.c	2008-02-28 19:54:52.000000000 +0100
 +++ b/net/wireless/sysfs.c	2008-02-28 19:54:53.000000000 +0100
 @@ -52,6 +52,7 @@ static void wiphy_dev_release(struct dev
@@ -91,31 +65,6 @@
  
  
  struct pcmcia_device;
---- a/net/mac80211/util.c	2008-02-28 19:54:52.000000000 +0100
-+++ b/net/mac80211/util.c	2008-02-28 19:54:53.000000000 +0100
-@@ -20,9 +20,15 @@
- #include <linux/if_arp.h>
- #include <linux/wireless.h>
- #include <linux/bitmap.h>
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
- #include <net/net_namespace.h>
-+#endif
- #include <net/cfg80211.h>
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22))
- #include <net/rtnetlink.h>
-+#else
-+#include <linux/rtnetlink.h>
-+#endif
- 
- #include "ieee80211_i.h"
- #include "ieee80211_rate.h"
---- a/net/ieee80211/Makefile	2008-02-28 19:54:52.000000000 +0100
-+++ b/net/ieee80211/Makefile	2008-02-28 19:54:53.000000000 +0100
-@@ -10,4 +10,3 @@ ieee80211-objs := \
- 	ieee80211_wx.o \
- 	ieee80211_geo.o
- 
--obj-$(CONFIG_IEEE80211_SOFTMAC) += softmac/
 --- a/net/ieee80211/ieee80211_module.c	2008-02-28 19:54:52.000000000 +0100
 +++ b/net/ieee80211/ieee80211_module.c	2008-02-28 19:54:53.000000000 +0100
 @@ -47,7 +47,9 @@
@@ -128,44 +77,6 @@
  #include <net/arp.h>
  
  #include <net/ieee80211.h>
---- a/drivers/net/wireless/libertas/dev.h	2008-02-28 19:54:52.000000000 +0100
-+++ b/drivers/net/wireless/libertas/dev.h	2008-02-28 19:54:53.000000000 +0100
-@@ -10,6 +10,7 @@
- #include <linux/wireless.h>
- #include <linux/ethtool.h>
- #include <linux/debugfs.h>
-+#include <net/compat.h>
- 
- #include "defs.h"
- #include "scan.h"
---- a/drivers/net/wireless/libertas/ethtool.c	2008-02-28 19:54:52.000000000 +0100
-+++ b/drivers/net/wireless/libertas/ethtool.c	2008-02-28 19:54:53.000000000 +0100
-@@ -144,6 +144,7 @@ static void lbs_ethtool_get_stats(struct
- 	lbs_deb_enter(LBS_DEB_ETHTOOL);
- }
- 
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
- static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
- {
- 	switch (sset) {
-@@ -153,6 +154,7 @@ static int lbs_ethtool_get_sset_count(st
- 		return -EOPNOTSUPP;
- 	}
- }
-+#endif
- 
- static void lbs_ethtool_get_strings(struct net_device *dev,
- 					  u32 stringset,
-@@ -221,7 +223,9 @@ struct ethtool_ops lbs_ethtool_ops = {
- 	.get_drvinfo = lbs_ethtool_get_drvinfo,
- 	.get_eeprom =  lbs_ethtool_get_eeprom,
- 	.get_eeprom_len = lbs_ethtool_get_eeprom_len,
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
- 	.get_sset_count = lbs_ethtool_get_sset_count,
-+#endif
- 	.get_ethtool_stats = lbs_ethtool_get_stats,
- 	.get_strings = lbs_ethtool_get_strings,
- 	.get_wol = lbs_ethtool_get_wol,
 --- a/net/mac80211/cfg.c	2008-02-28 19:54:52.000000000 +0100
 +++ b/net/mac80211/cfg.c	2008-02-28 19:54:53.000000000 +0100
 @@ -9,7 +9,9 @@
@@ -258,9 +169,9 @@
  
  ifeq ($(CONFIG_USB_DEBUG),y)
  EXTRA_CFLAGS += -DDEBUG
---- a/drivers/net/wireless/Makefile	2008-02-28 19:54:52.000000000 +0100
-+++ b/drivers/net/wireless/Makefile	2008-02-28 19:54:53.000000000 +0100
-@@ -6,49 +6,12 @@ obj-$(CONFIG_IPW2100) += ipw2100.o
+--- a/drivers/net/wireless/Makefile	2008-03-11 19:54:52.000000000 +0100
++++ b/drivers/net/wireless/Makefile	2008-03-11 19:54:53.000000000 +0100
+@@ -6,48 +6,13 @@ obj-$(CONFIG_IPW2100) += ipw2100.o
  
  obj-$(CONFIG_IPW2200) += ipw2200.o
  
@@ -290,12 +201,11 @@
 -obj-$(CONFIG_PCI_ATMEL)         += atmel_pci.o 
 -obj-$(CONFIG_PCMCIA_ATMEL)      += atmel_cs.o
 -
--obj-$(CONFIG_USB_ATMEL)	        += at76_usb.o
+ obj-$(CONFIG_USB_ATMEL)	        += at76_usb.o
 -
 -obj-$(CONFIG_PRISM54)		+= prism54/
 -
 -obj-$(CONFIG_HOSTAP)		+= hostap/
--obj-$(CONFIG_BCM43XX)		+= bcm43xx/
  obj-$(CONFIG_B43)		+= b43/
  obj-$(CONFIG_B43LEGACY)		+= b43legacy/
  obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
@@ -335,385 +245,6 @@
  obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
 -obj-$(CONFIG_INTEL_MENLOW)	+= intel_menlow.o
 -obj-$(CONFIG_ENCLOSURE_SERVICES) += enclosure.o
---- a/drivers/net/wireless/adm8211.c	2008-02-28 19:54:52.000000000 +0100
-+++ b/drivers/net/wireless/adm8211.c	2008-02-28 19:54:53.000000000 +0100
-@@ -143,7 +143,11 @@ static int adm8211_read_eeprom(struct ie
- 		break;
- 
- 	default:
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		if (priv->revid < ADM8211_REV_CA)
-+#else
- 		if (priv->pdev->revision < ADM8211_REV_CA)
-+#endif
- 			priv->rf_type = ADM8211_TYPE_RFMD;
- 		else
- 			priv->rf_type = ADM8211_TYPE_AIROHA;
-@@ -161,7 +165,11 @@ static int adm8211_read_eeprom(struct ie
- 	case ADM8211_TYPE_ADMTEK:
- 		break;
- 	default:
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		if (priv->revid < ADM8211_REV_CA)
-+#else
- 		if (priv->pdev->revision < ADM8211_REV_CA)
-+#endif
- 			priv->bbp_type = ADM8211_TYPE_RFMD;
- 		else
- 			priv->bbp_type = ADM8211_TYPE_ADMTEK;
-@@ -201,7 +209,11 @@ static int adm8211_read_eeprom(struct ie
- 		break;
- 
- 	default:
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		if (priv->revid < ADM8211_REV_CA)
-+#else
- 		if (priv->pdev->revision < ADM8211_REV_CA)
-+#endif
- 			priv->specific_bbptype = ADM8211_BBP_RFMD3000;
- 		else
- 			priv->specific_bbptype = ADM8211_BBP_ADM8011;
-@@ -220,11 +232,23 @@ static int adm8211_read_eeprom(struct ie
- 		break;
- 
- 	default:
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		if (priv->revid == ADM8211_REV_BA)
-+#else
- 		if (priv->pdev->revision == ADM8211_REV_BA)
-+#endif
- 			priv->transceiver_type = ADM8211_RFMD2958_RF3000_CONTROL_POWER;
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		else if (priv->revid == ADM8211_REV_CA)
-+#else
- 		else if (priv->pdev->revision == ADM8211_REV_CA)
-+#endif
- 			priv->transceiver_type = ADM8211_AL2210L;
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		else if (priv->revid == ADM8211_REV_AB)
-+#else
- 		else if (priv->pdev->revision == ADM8211_REV_AB)
-+#endif
- 			priv->transceiver_type = ADM8211_RFMD2948;
- 
- 		printk(KERN_WARNING "%s (adm8211): Unknown transceiver: %d\n",
-@@ -246,7 +270,11 @@ static inline void adm8211_write_sram(st
- 	struct adm8211_priv *priv = dev->priv;
- 
- 	ADM8211_CSR_WRITE(WEPCTL, addr | ADM8211_WEPCTL_TABLE_WR |
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+			(priv->revid < ADM8211_REV_BA ?
-+#else
- 			  (priv->pdev->revision < ADM8211_REV_BA ?
-+#endif
- 			   0 : ADM8211_WEPCTL_SEL_WEPTABLE ));
- 	ADM8211_CSR_READ(WEPCTL);
- 	msleep(1);
-@@ -264,7 +292,11 @@ static void adm8211_write_sram_bytes(str
- 	u32 reg = ADM8211_CSR_READ(WEPCTL);
- 	unsigned int i;
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	if (priv->revid < ADM8211_REV_BA) {
-+#else
- 	if (priv->pdev->revision < ADM8211_REV_BA) {
-+#endif
- 		for (i = 0; i < len; i += 2) {
- 			u16 val = buf[i] | (buf[i + 1] << 8);
- 			adm8211_write_sram(dev, addr + i / 2, val);
-@@ -445,7 +477,11 @@ static void adm8211_interrupt_rci(struct
- 		if (skb) {
- 			struct ieee80211_rx_status rx_status = {0};
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+			if (priv->revid < ADM8211_REV_CA)
-+#else
- 			if (priv->pdev->revision < ADM8211_REV_CA)
-+#endif
- 				rx_status.ssi = rssi;
- 			else
- 				rx_status.ssi = 100 - rssi;
-@@ -725,7 +761,11 @@ static int adm8211_rf_set_channel(struct
- 		adm8211_rf_write_syn_rfmd2958(dev, 0x0A, reg);
- 		/* set TXRX TX_GAIN */
- 		adm8211_rf_write_syn_rfmd2958(dev, 0x09, 0x00050 |
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+			(priv->revid < ADM8211_REV_CA ? tx_power : 0));
-+#else
- 			(priv->pdev->revision < ADM8211_REV_CA ? tx_power : 0));
-+#endif
- 	} else {
- 		reg = ADM8211_CSR_READ(PLCPHD);
- 		reg &= 0xff00ffff;
-@@ -744,7 +784,11 @@ static int adm8211_rf_set_channel(struct
- 				  tx_power<<2);
- 	adm8211_write_bbp(dev, RF3000_LOW_GAIN_CALIB, lpf_cutoff);
- 	adm8211_write_bbp(dev, RF3000_HIGH_GAIN_CALIB, lnags_thresh);
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	adm8211_write_bbp(dev, 0x1c, priv->revid == ADM8211_REV_BA ?
-+#else
- 	adm8211_write_bbp(dev, 0x1c, priv->pdev->revision == ADM8211_REV_BA ?
-+#endif
- 				     priv->eeprom->cr28 : 0);
- 	adm8211_write_bbp(dev, 0x1d, priv->eeprom->cr29);
- 
-@@ -783,7 +827,11 @@ static void adm8211_update_mode(struct i
- 		priv->nar |= ADM8211_NAR_EA | ADM8211_NAR_ST | ADM8211_NAR_SR;
- 
- 		/* don't trust the error bits on rev 0x20 and up in adhoc */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		if (priv->revid >= ADM8211_REV_BA)
-+#else
- 		if (priv->pdev->revision >= ADM8211_REV_BA)
-+#endif
- 			priv->soft_rx_crc = 1;
- 		break;
- 	case IEEE80211_IF_TYPE_MNTR:
-@@ -884,7 +932,11 @@ static int adm8211_hw_init_bbp(struct ie
- 			break;
- 		}
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+		switch (priv->revid) {
-+#else
- 		switch (priv->pdev->revision) {
-+#endif
- 		case ADM8211_REV_CA:
- 			if (priv->transceiver_type == ADM8211_RFMD2958 ||
- 			    priv->transceiver_type == ADM8211_RFMD2958_RF3000_CONTROL_POWER ||
-@@ -942,7 +994,11 @@ static int adm8211_hw_init_bbp(struct ie
- 			adm8211_write_bbp(dev, 0x1c, 0x00);
- 			adm8211_write_bbp(dev, 0x1d, 0x80);
- 		} else {
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+			if (priv->revid == ADM8211_REV_BA)
-+#else
- 			if (priv->pdev->revision == ADM8211_REV_BA)
-+#endif
- 				adm8211_write_bbp(dev, 0x1c, priv->eeprom->cr28);
- 			else
- 				adm8211_write_bbp(dev, 0x1c, 0x00);
-@@ -1074,7 +1130,11 @@ static int adm8211_set_rate(struct ieee8
- 	u8 rate_buf[12] = {0};
- 
- 	/* write supported rates */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	if (priv->revid != ADM8211_REV_BA) {
-+#else
- 	if (priv->pdev->revision != ADM8211_REV_BA) {
-+#endif
- 		rate_buf[0] = ARRAY_SIZE(adm8211_rates);
- 		for (i = 0; i < ARRAY_SIZE(adm8211_rates); i++)
- 			rate_buf[i + 1] = (adm8211_rates[i].bitrate / 5) | 0x80;
-@@ -1158,7 +1218,11 @@ static void adm8211_hw_init(struct ieee8
- 	 * PWR0PE2  = 13 us
- 	 * PWR1PE2  = 1 us
- 	 * PWR0TXPE = 8 or 6 */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	if (priv->revid < ADM8211_REV_CA)
-+#else
- 	if (priv->pdev->revision < ADM8211_REV_CA)
-+#endif
- 		ADM8211_CSR_WRITE(TOFS2, 0x8815cd18);
- 	else
- 		ADM8211_CSR_WRITE(TOFS2, 0x8535cd16);
-@@ -1187,7 +1251,11 @@ static void adm8211_hw_init(struct ieee8
- 
- 	/* SLOT=20 us, SIFS=110 cycles of 22 MHz (5 us),
- 	 * DIFS=50 us, EIFS=100 us */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	if (priv->revid < ADM8211_REV_CA)
-+#else
- 	if (priv->pdev->revision < ADM8211_REV_CA)
-+#endif
- 		ADM8211_CSR_WRITE(IFST, (20 << 23) | (110 << 15) |
- 					(50 << 9)  | 100);
- 	else
-@@ -1246,13 +1314,21 @@ static int adm8211_hw_reset(struct ieee8
- 
- 	ADM8211_CSR_WRITE(PAR, tmp);
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	if (priv->revid == ADM8211_REV_BA &&
-+#else
- 	if (priv->pdev->revision == ADM8211_REV_BA &&
-+#endif
- 	    (priv->transceiver_type == ADM8211_RFMD2958_RF3000_CONTROL_POWER ||
- 	     priv->transceiver_type == ADM8211_RFMD2958)) {
- 		reg = ADM8211_CSR_READ(CSR_TEST1);
- 		reg |= (1 << 4) | (1 << 5);
- 		ADM8211_CSR_WRITE(CSR_TEST1, reg);
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	} else if (priv->revid == ADM8211_REV_CA) {
-+#else
- 	} else if (priv->pdev->revision == ADM8211_REV_CA) {
-+#endif
- 		reg = ADM8211_CSR_READ(CSR_TEST1);
- 		reg &= ~((1 << 4) | (1 << 5));
- 		ADM8211_CSR_WRITE(CSR_TEST1, reg);
-@@ -1887,6 +1963,9 @@ static int __devinit adm8211_probe(struc
- 		       pci_name(pdev));
- 		goto err_iounmap;
- 	}
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &priv->revid);
-+#endif
- 
- 	*(__le32 *)perm_addr = cpu_to_le32(ADM8211_CSR_READ(PAR0));
- 	*(__le16 *)&perm_addr[4] =
-@@ -1915,7 +1994,11 @@ static int __devinit adm8211_probe(struc
- 	priv->mode = IEEE80211_IF_TYPE_INVALID;
- 
- 	/* Power-on issue. EEPROM won't read correctly without */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	if (priv->revid >= ADM8211_REV_BA) {
-+#else
- 	if (pdev->revision >= ADM8211_REV_BA) {
-+#endif
- 		ADM8211_CSR_WRITE(FRCTL, 0);
- 		ADM8211_CSR_READ(FRCTL);
- 		ADM8211_CSR_WRITE(FRCTL, 1);
-@@ -1943,7 +2026,11 @@ static int __devinit adm8211_probe(struc
- 
- 	printk(KERN_INFO "%s: hwaddr %s, Rev 0x%02x\n",
- 	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+	       priv->revid);
-+#else
- 	       pdev->revision);
-+#endif
- 
- 	return 0;
- 
---- a/net/mac80211/ieee80211.c	2008-02-28 13:35:06.000000000 -0500
-+++ b/net/mac80211/ieee80211.c	2008-02-28 13:35:08.000000000 -0500
-@@ -21,7 +21,9 @@
- #include <linux/wireless.h>
- #include <linux/rtnetlink.h>
- #include <linux/bitmap.h>
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
- #include <net/net_namespace.h>
-+#endif
- #include <net/cfg80211.h>
- 
- #include "ieee80211_i.h"
-@@ -915,6 +917,13 @@ static const struct header_ops ieee80211
- 	.cache_update	= eth_header_cache_update,
- };
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+static struct net_device_stats *ieee80211_get_stats(struct net_device *dev)
-+{
-+	return &IEEE80211_DEV_TO_SUB_IF(dev)->stats;
-+}
-+#endif
-+
- /* Must not be called for mdev */
- void ieee80211_if_setup(struct net_device *dev)
- {
-@@ -926,6 +935,9 @@ void ieee80211_if_setup(struct net_devic
- 	dev->open = ieee80211_open;
- 	dev->stop = ieee80211_stop;
- 	dev->destructor = ieee80211_if_free;
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+	dev->get_stats = ieee80211_get_stats;
-+#endif
- }
- 
- /* everything else */
-@@ -1616,7 +1628,12 @@ int ieee80211_register_hw(struct ieee802
- 	mdev->open = ieee80211_master_open;
- 	mdev->stop = ieee80211_master_stop;
- 	mdev->type = ARPHRD_IEEE80211;
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+	mdev->get_stats = ieee80211_get_stats;
-+#endif
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
- 	mdev->header_ops = &ieee80211_header_ops;
-+#endif
- 	mdev->set_multicast_list = ieee80211_master_set_multicast_list;
- 
- 	sdata->vif.type = IEEE80211_IF_TYPE_AP;
---- a/net/mac80211/ieee80211_i.h	2008-02-28 19:54:52.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2008-02-28 19:54:53.000000000 +0100
-@@ -417,6 +417,10 @@ struct ieee80211_sub_if_data {
- 
- 	struct wireless_dev wdev;
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+	struct net_device_stats stats;
-+#endif
-+
- 	/* keys */
- 	struct list_head key_list;
- 
-@@ -549,7 +553,7 @@ struct ieee80211_sub_if_data *vif_to_sda
- 	return container_of(p, struct ieee80211_sub_if_data, vif);
- }
- 
--#define IEEE80211_DEV_TO_SUB_IF(dev) netdev_priv(dev)
-+#define IEEE80211_DEV_TO_SUB_IF(dev) ((struct ieee80211_sub_if_data *)netdev_priv(dev))
- 
- enum {
- 	IEEE80211_RX_MSG	= 1,
---- a/net/mac80211/rx.c	2008-02-28 19:54:52.000000000 +0100
-+++ b/net/mac80211/rx.c	2008-02-28 19:54:53.000000000 +0100
-@@ -237,8 +237,13 @@ ieee80211_rx_monitor(struct ieee80211_lo
- 		}
- 
- 		prev_dev = sdata->dev;
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+		sdata->stats.rx_packets++;
-+		sdata->stats.rx_bytes += skb->len;
-+#else
- 		sdata->dev->stats.rx_packets++;
- 		sdata->dev->stats.rx_bytes += skb->len;
-+#endif
- 	}
- 
- 	if (prev_dev) {
-@@ -1378,8 +1383,13 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx
- 
- 	skb->dev = dev;
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+	IEEE80211_DEV_TO_SUB_IF(dev)->stats.rx_packets++;
-+	IEEE80211_DEV_TO_SUB_IF(dev)->stats.rx_bytes += skb->len;
-+#else
- 	dev->stats.rx_packets++;
- 	dev->stats.rx_bytes += skb->len;
-+#endif
- 
- 	/* skip the wrapping header */
- 	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
-@@ -1488,8 +1498,13 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- 
- 	rx->skb->dev = dev;
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+	rx->sdata->stats.rx_packets++;
-+	rx->sdata->stats.rx_bytes += rx->skb->len;
-+#else
- 	dev->stats.rx_packets++;
- 	dev->stats.rx_bytes += rx->skb->len;
-+#endif
- 
- 	ieee80211_deliver_skb(rx);
- 
-@@ -1694,8 +1709,13 @@ static void ieee80211_rx_cooked_monitor(
- 		}
- 
- 		prev_dev = sdata->dev;
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-+		sdata->stats.rx_packets++;
-+		sdata->stats.rx_bytes += skb->len;
-+#else
- 		sdata->dev->stats.rx_packets++;
- 		sdata->dev->stats.rx_bytes += skb->len;
-+#endif
- 	}
- 
- 	if (prev_dev) {
 --- a/net/wireless/core.c	2008-02-28 19:54:52.000000000 +0100
 +++ b/net/wireless/core.c	2008-02-28 19:54:53.000000000 +0100
 @@ -71,9 +71,9 @@ __cfg80211_drv_from_info(struct genl_inf
@@ -785,44 +316,6 @@
  			return -EINVAL;
  	}
  	return 0;
---- a/drivers/ssb/main.c	2008-03-07 20:02:05.000000000 -0500
-+++ b/drivers/ssb/main.c	2008-03-07 20:02:07.000000000 -0500
-@@ -341,6 +341,27 @@
- 	return 0;
- }
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
-+static int ssb_device_uevent(struct device *dev, char **envp,
-+	int num_envp, char *buffer, int buffer_size)
-+{
-+	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
-+	int cur_index = 0, cur_len = 0;
-+
-+	if (!dev)
-+		return -ENODEV;
-+
-+	return add_uevent_var(envp,
-+			num_envp,
-+			&cur_index,
-+			buffer,
-+			buffer_size,
-+			&cur_len,
-+			"MODALIAS=ssb:v%04Xid%04Xrev%02X",
-+			ssb_dev->id.vendor, ssb_dev->id.coreid,
-+			ssb_dev->id.revision);
-+}
-+#else
- static int ssb_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- {
- 	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
-@@ -353,6 +374,7 @@
- 			     ssb_dev->id.vendor, ssb_dev->id.coreid,
- 			     ssb_dev->id.revision);
- }
-+#endif
- 
- static struct bus_type ssb_bustype = {
- 	.name		= "ssb",
 --- a/drivers/net/wireless/zd1211rw/zd_mac.c	2008-03-07 20:02:06.000000000 -0500
 +++ b/drivers/net/wireless/zd1211rw/zd_mac.c	2008-03-07 20:02:07.000000000 -0500
 @@ -1042,5 +1042,5 @@
@@ -854,8 +347,8 @@
  	LED_SCANNING = 1,
  	LED_ASSOCIATED = 2,
  };
---- a/drivers/net/wireless/ath5k/hw.c	2008-03-07 20:16:26.000000000 -0500
-+++ b/drivers/net/wireless/ath5k/hw.c	2008-03-07 20:16:26.000000000 -0500
+--- a/drivers/net/wireless/ath5k/hw.c	2008-03-14 10:32:35.000000000 -0400
++++ b/drivers/net/wireless/ath5k/hw.c	2008-03-14 10:32:36.000000000 -0400
 @@ -385,7 +385,11 @@
  	/* reseting PCI on PCI-E cards results card to hang
  	 * and always return 0xffff... so we ingore that flag
@@ -868,7 +361,7 @@
  
  	/* Reset chipset */
  	ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
-@@ -935,7 +939,11 @@
+@@ -937,7 +941,11 @@
  	 * TODO: Check out tx triger level, it's always 64 on dumps but I
  	 * guess we can tweak it and see how it goes ;-)
  	 */
@@ -880,3 +373,502 @@
  	if (ah->ah_version != AR5K_AR5210) {
  		AR5K_REG_WRITE_BITS(ah, AR5K_TXCFG,
  			AR5K_TXCFG_SDMAMR, dma_size);
+--- a/drivers/net/wireless/libertas/ethtool.c	2008-04-03 21:51:48.000000000 -0400
++++ b/drivers/net/wireless/libertas/ethtool.c	2008-04-03 21:51:49.000000000 -0400
+@@ -111,6 +111,7 @@
+ 	lbs_deb_enter(LBS_DEB_ETHTOOL);
+ }
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
+ {
+ 	switch (sset) {
+@@ -120,6 +121,7 @@
+ 		return -EOPNOTSUPP;
+ 	}
+ }
++#endif
+ 
+ static void lbs_ethtool_get_strings(struct net_device *dev,
+ 					  u32 stringset,
+@@ -188,7 +190,9 @@
+ 	.get_drvinfo = lbs_ethtool_get_drvinfo,
+ 	.get_eeprom =  lbs_ethtool_get_eeprom,
+ 	.get_eeprom_len = lbs_ethtool_get_eeprom_len,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ 	.get_sset_count = lbs_ethtool_get_sset_count,
++#endif
+ 	.get_ethtool_stats = lbs_ethtool_get_stats,
+ 	.get_strings = lbs_ethtool_get_strings,
+ 	.get_wol = lbs_ethtool_get_wol,
+--- a/net/mac80211/tx.c	2008-04-15 19:25:05.000000000 -0700
++++ b/net/mac80211/tx.c	2008-04-15 19:25:05.000000000 -0700
+@@ -18,7 +18,9 @@
+ #include <linux/etherdevice.h>
+ #include <linux/bitmap.h>
+ #include <linux/rcupdate.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ #include <net/net_namespace.h>
++#endif
+ #include <net/ieee80211_radiotap.h>
+ #include <net/cfg80211.h>
+ #include <net/mac80211.h>
+@@ -1618,8 +1620,13 @@
+ 		pkt_data->flags |= IEEE80211_TXPD_EAPOL_FRAME;
+ 
+ 	skb->dev = local->mdev;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++	sdata->stats.tx_packets++;
++	sdata->stats.tx_bytes += skb->len;
++#else
+ 	dev->stats.tx_packets++;
+ 	dev->stats.tx_bytes += skb->len;
++#endif
+ 
+ 	/* Update skb pointers to various headers since this modified frame
+ 	 * is going to go through Linux networking code that may potentially
+--- a/net/mac80211/util.c	2008-04-15 19:25:05.000000000 -0700
++++ b/net/mac80211/util.c	2008-04-15 19:25:05.000000000 -0700
+@@ -20,9 +20,15 @@
+ #include <linux/if_arp.h>
+ #include <linux/wireless.h>
+ #include <linux/bitmap.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ #include <net/net_namespace.h>
++#endif
+ #include <net/cfg80211.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22))
+ #include <net/rtnetlink.h>
++#else
++#include <linux/rtnetlink.h>
++#endif
+ 
+ #include "ieee80211_i.h"
+ #include "rate.h"
+--- a/drivers/net/wireless/libertas/dev.h	2008-04-15 19:25:05.000000000 -0700
++++ b/drivers/net/wireless/libertas/dev.h	2008-04-15 19:28:16.000000000 -0700
+@@ -11,6 +11,7 @@
+ #include <linux/ethtool.h>
+ #include <linux/debugfs.h>
+ #include <net/ieee80211.h>
++#include <net/compat.h>
+ 
+ #include "defs.h"
+ #include "hostcmd.h"
+--- a/drivers/net/wireless/adm8211.c	2008-04-15 19:25:05.000000000 -0700
++++ b/drivers/net/wireless/adm8211.c	2008-04-15 19:25:05.000000000 -0700
+@@ -143,7 +143,11 @@
+ 		break;
+ 
+ 	default:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		if (priv->revid < ADM8211_REV_CA)
++#else
+ 		if (priv->pdev->revision < ADM8211_REV_CA)
++#endif
+ 			priv->rf_type = ADM8211_TYPE_RFMD;
+ 		else
+ 			priv->rf_type = ADM8211_TYPE_AIROHA;
+@@ -161,7 +165,11 @@
+ 	case ADM8211_TYPE_ADMTEK:
+ 		break;
+ 	default:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		if (priv->revid < ADM8211_REV_CA)
++#else
+ 		if (priv->pdev->revision < ADM8211_REV_CA)
++#endif
+ 			priv->bbp_type = ADM8211_TYPE_RFMD;
+ 		else
+ 			priv->bbp_type = ADM8211_TYPE_ADMTEK;
+@@ -201,7 +209,11 @@
+ 		break;
+ 
+ 	default:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		if (priv->revid < ADM8211_REV_CA)
++#else
+ 		if (priv->pdev->revision < ADM8211_REV_CA)
++#endif
+ 			priv->specific_bbptype = ADM8211_BBP_RFMD3000;
+ 		else
+ 			priv->specific_bbptype = ADM8211_BBP_ADM8011;
+@@ -220,11 +232,23 @@
+ 		break;
+ 
+ 	default:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		if (priv->revid == ADM8211_REV_BA)
++#else
+ 		if (priv->pdev->revision == ADM8211_REV_BA)
++#endif
+ 			priv->transceiver_type = ADM8211_RFMD2958_RF3000_CONTROL_POWER;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		else if (priv->revid == ADM8211_REV_CA)
++#else
+ 		else if (priv->pdev->revision == ADM8211_REV_CA)
++#endif
+ 			priv->transceiver_type = ADM8211_AL2210L;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		else if (priv->revid == ADM8211_REV_AB)
++#else
+ 		else if (priv->pdev->revision == ADM8211_REV_AB)
++#endif
+ 			priv->transceiver_type = ADM8211_RFMD2948;
+ 
+ 		printk(KERN_WARNING "%s (adm8211): Unknown transceiver: %d\n",
+@@ -246,7 +270,11 @@
+ 	struct adm8211_priv *priv = dev->priv;
+ 
+ 	ADM8211_CSR_WRITE(WEPCTL, addr | ADM8211_WEPCTL_TABLE_WR |
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++			(priv->revid < ADM8211_REV_BA ?
++#else
+ 			  (priv->pdev->revision < ADM8211_REV_BA ?
++#endif
+ 			   0 : ADM8211_WEPCTL_SEL_WEPTABLE ));
+ 	ADM8211_CSR_READ(WEPCTL);
+ 	msleep(1);
+@@ -264,7 +292,11 @@
+ 	u32 reg = ADM8211_CSR_READ(WEPCTL);
+ 	unsigned int i;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	if (priv->revid < ADM8211_REV_BA) {
++#else
+ 	if (priv->pdev->revision < ADM8211_REV_BA) {
++#endif
+ 		for (i = 0; i < len; i += 2) {
+ 			u16 val = buf[i] | (buf[i + 1] << 8);
+ 			adm8211_write_sram(dev, addr + i / 2, val);
+@@ -445,7 +477,11 @@
+ 		if (skb) {
+ 			struct ieee80211_rx_status rx_status = {0};
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++			if (priv->revid < ADM8211_REV_CA)
++#else
+ 			if (priv->pdev->revision < ADM8211_REV_CA)
++#endif
+ 				rx_status.ssi = rssi;
+ 			else
+ 				rx_status.ssi = 100 - rssi;
+@@ -718,7 +754,11 @@
+ 		adm8211_rf_write_syn_rfmd2958(dev, 0x0A, reg);
+ 		/* set TXRX TX_GAIN */
+ 		adm8211_rf_write_syn_rfmd2958(dev, 0x09, 0x00050 |
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++			(priv->revid < ADM8211_REV_CA ? tx_power : 0));
++#else
+ 			(priv->pdev->revision < ADM8211_REV_CA ? tx_power : 0));
++#endif
+ 	} else {
+ 		reg = ADM8211_CSR_READ(PLCPHD);
+ 		reg &= 0xff00ffff;
+@@ -737,7 +777,11 @@
+ 				  tx_power<<2);
+ 	adm8211_write_bbp(dev, RF3000_LOW_GAIN_CALIB, lpf_cutoff);
+ 	adm8211_write_bbp(dev, RF3000_HIGH_GAIN_CALIB, lnags_thresh);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	adm8211_write_bbp(dev, 0x1c, priv->revid == ADM8211_REV_BA ?
++#else
+ 	adm8211_write_bbp(dev, 0x1c, priv->pdev->revision == ADM8211_REV_BA ?
++#endif
+ 				     priv->eeprom->cr28 : 0);
+ 	adm8211_write_bbp(dev, 0x1d, priv->eeprom->cr29);
+ 
+@@ -776,7 +820,11 @@
+ 		priv->nar |= ADM8211_NAR_EA | ADM8211_NAR_ST | ADM8211_NAR_SR;
+ 
+ 		/* don't trust the error bits on rev 0x20 and up in adhoc */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		if (priv->revid >= ADM8211_REV_BA)
++#else
+ 		if (priv->pdev->revision >= ADM8211_REV_BA)
++#endif
+ 			priv->soft_rx_crc = 1;
+ 		break;
+ 	case IEEE80211_IF_TYPE_MNTR:
+@@ -877,7 +925,11 @@
+ 			break;
+ 		}
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++		switch (priv->revid) {
++#else
+ 		switch (priv->pdev->revision) {
++#endif
+ 		case ADM8211_REV_CA:
+ 			if (priv->transceiver_type == ADM8211_RFMD2958 ||
+ 			    priv->transceiver_type == ADM8211_RFMD2958_RF3000_CONTROL_POWER ||
+@@ -935,7 +987,11 @@
+ 			adm8211_write_bbp(dev, 0x1c, 0x00);
+ 			adm8211_write_bbp(dev, 0x1d, 0x80);
+ 		} else {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++			if (priv->revid == ADM8211_REV_BA)
++#else
+ 			if (priv->pdev->revision == ADM8211_REV_BA)
++#endif
+ 				adm8211_write_bbp(dev, 0x1c, priv->eeprom->cr28);
+ 			else
+ 				adm8211_write_bbp(dev, 0x1c, 0x00);
+@@ -1067,7 +1123,11 @@
+ 	u8 rate_buf[12] = {0};
+ 
+ 	/* write supported rates */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	if (priv->revid != ADM8211_REV_BA) {
++#else
+ 	if (priv->pdev->revision != ADM8211_REV_BA) {
++#endif
+ 		rate_buf[0] = ARRAY_SIZE(adm8211_rates);
+ 		for (i = 0; i < ARRAY_SIZE(adm8211_rates); i++)
+ 			rate_buf[i + 1] = (adm8211_rates[i].bitrate / 5) | 0x80;
+@@ -1151,7 +1211,11 @@
+ 	 * PWR0PE2  = 13 us
+ 	 * PWR1PE2  = 1 us
+ 	 * PWR0TXPE = 8 or 6 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	if (priv->revid < ADM8211_REV_CA)
++#else
+ 	if (priv->pdev->revision < ADM8211_REV_CA)
++#endif
+ 		ADM8211_CSR_WRITE(TOFS2, 0x8815cd18);
+ 	else
+ 		ADM8211_CSR_WRITE(TOFS2, 0x8535cd16);
+@@ -1180,7 +1244,11 @@
+ 
+ 	/* SLOT=20 us, SIFS=110 cycles of 22 MHz (5 us),
+ 	 * DIFS=50 us, EIFS=100 us */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	if (priv->revid < ADM8211_REV_CA)
++#else
+ 	if (priv->pdev->revision < ADM8211_REV_CA)
++#endif
+ 		ADM8211_CSR_WRITE(IFST, (20 << 23) | (110 << 15) |
+ 					(50 << 9)  | 100);
+ 	else
+@@ -1239,13 +1307,21 @@
+ 
+ 	ADM8211_CSR_WRITE(PAR, tmp);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	if (priv->revid == ADM8211_REV_BA &&
++#else
+ 	if (priv->pdev->revision == ADM8211_REV_BA &&
++#endif
+ 	    (priv->transceiver_type == ADM8211_RFMD2958_RF3000_CONTROL_POWER ||
+ 	     priv->transceiver_type == ADM8211_RFMD2958)) {
+ 		reg = ADM8211_CSR_READ(CSR_TEST1);
+ 		reg |= (1 << 4) | (1 << 5);
+ 		ADM8211_CSR_WRITE(CSR_TEST1, reg);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	} else if (priv->revid == ADM8211_REV_CA) {
++#else
+ 	} else if (priv->pdev->revision == ADM8211_REV_CA) {
++#endif
+ 		reg = ADM8211_CSR_READ(CSR_TEST1);
+ 		reg &= ~((1 << 4) | (1 << 5));
+ 		ADM8211_CSR_WRITE(CSR_TEST1, reg);
+@@ -1880,6 +1956,9 @@
+ 		       pci_name(pdev));
+ 		goto err_iounmap;
+ 	}
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &priv->revid);
++#endif
+ 
+ 	*(__le32 *)perm_addr = cpu_to_le32(ADM8211_CSR_READ(PAR0));
+ 	*(__le16 *)&perm_addr[4] =
+@@ -1908,7 +1987,11 @@
+ 	priv->mode = IEEE80211_IF_TYPE_INVALID;
+ 
+ 	/* Power-on issue. EEPROM won't read correctly without */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	if (priv->revid >= ADM8211_REV_BA) {
++#else
+ 	if (pdev->revision >= ADM8211_REV_BA) {
++#endif
+ 		ADM8211_CSR_WRITE(FRCTL, 0);
+ 		ADM8211_CSR_READ(FRCTL);
+ 		ADM8211_CSR_WRITE(FRCTL, 1);
+@@ -1936,7 +2019,11 @@
+ 
+ 	printk(KERN_INFO "%s: hwaddr %s, Rev 0x%02x\n",
+ 	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
++	       priv->revid);
++#else
+ 	       pdev->revision);
++#endif
+ 
+ 	return 0;
+ 
+--- a/drivers/ssb/main.c	2008-04-15 19:25:05.000000000 -0700
++++ b/drivers/ssb/main.c	2008-04-15 19:25:05.000000000 -0700
+@@ -347,6 +347,27 @@
+ 	return 0;
+ }
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
++static int ssb_device_uevent(struct device *dev, char **envp,
++	int num_envp, char *buffer, int buffer_size)
++{
++	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
++	int cur_index = 0, cur_len = 0;
++
++	if (!dev)
++		return -ENODEV;
++
++	return add_uevent_var(envp,
++			num_envp,
++			&cur_index,
++			buffer,
++			buffer_size,
++			&cur_len,
++			"MODALIAS=ssb:v%04Xid%04Xrev%02X",
++			ssb_dev->id.vendor, ssb_dev->id.coreid,
++			ssb_dev->id.revision);
++}
++#else
+ static int ssb_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+ 	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
+@@ -359,6 +380,7 @@
+ 			     ssb_dev->id.vendor, ssb_dev->id.coreid,
+ 			     ssb_dev->id.revision);
+ }
++#endif
+ 
+ static struct bus_type ssb_bustype = {
+ 	.name		= "ssb",
+--- a/net/mac80211/rx.c	2008-04-15 19:31:45.000000000 -0700
++++ b/net/mac80211/rx.c	2008-04-15 19:31:45.000000000 -0700
+@@ -237,8 +237,13 @@
+ 		}
+ 
+ 		prev_dev = sdata->dev;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++		sdata->stats.rx_packets++;
++		sdata->stats.rx_bytes += skb->len;
++#else
+ 		sdata->dev->stats.rx_packets++;
+ 		sdata->dev->stats.rx_bytes += skb->len;
++#endif
+ 	}
+ 
+ 	if (prev_dev) {
+@@ -1375,8 +1380,13 @@
+ 
+ 	skb->dev = dev;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++	IEEE80211_DEV_TO_SUB_IF(dev)->stats.rx_packets++;
++	IEEE80211_DEV_TO_SUB_IF(dev)->stats.rx_bytes += skb->len;
++#else
+ 	dev->stats.rx_packets++;
+ 	dev->stats.rx_bytes += skb->len;
++#endif
+ 
+ 	/* skip the wrapping header */
+ 	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
+@@ -1485,8 +1495,13 @@
+ 
+ 	rx->skb->dev = dev;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++	rx->sdata->stats.rx_packets++;
++	rx->sdata->stats.rx_bytes += rx->skb->len;
++#else
+ 	dev->stats.rx_packets++;
+ 	dev->stats.rx_bytes += rx->skb->len;
++#endif
+ 
+ 	ieee80211_deliver_skb(rx);
+ 
+@@ -1692,8 +1707,13 @@
+ 		}
+ 
+ 		prev_dev = sdata->dev;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++		sdata->stats.rx_packets++;
++		sdata->stats.rx_bytes += skb->len;
++#else
+ 		sdata->dev->stats.rx_packets++;
+ 		sdata->dev->stats.rx_bytes += skb->len;
++#endif
+ 	}
+ 
+ 	if (prev_dev) {
+--- a/net/mac80211/main.c	2008-04-15 19:36:34.000000000 -0700
++++ b/net/mac80211/main.c	2008-04-15 19:36:34.000000000 -0700
+@@ -21,7 +21,9 @@
+ #include <linux/wireless.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/bitmap.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ #include <net/net_namespace.h>
++#endif
+ #include <net/cfg80211.h>
+ 
+ #include "ieee80211_i.h"
+@@ -940,6 +942,13 @@
+ 	.cache_update	= eth_header_cache_update,
+ };
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++static struct net_device_stats *ieee80211_get_stats(struct net_device *dev)
++{
++	return &IEEE80211_DEV_TO_SUB_IF(dev)->stats;
++}
++#endif
++
+ /* Must not be called for mdev */
+ void ieee80211_if_setup(struct net_device *dev)
+ {
+@@ -951,6 +960,9 @@
+ 	dev->open = ieee80211_open;
+ 	dev->stop = ieee80211_stop;
+ 	dev->destructor = ieee80211_if_free;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++	dev->get_stats = ieee80211_get_stats;
++#endif
+ }
+ 
+ /* everything else */
+@@ -1656,7 +1668,12 @@
+ 	mdev->open = ieee80211_master_open;
+ 	mdev->stop = ieee80211_master_stop;
+ 	mdev->type = ARPHRD_IEEE80211;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++	mdev->get_stats = ieee80211_get_stats;
++#endif
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ 	mdev->header_ops = &ieee80211_header_ops;
++#endif
+ 	mdev->set_multicast_list = ieee80211_master_set_multicast_list;
+ 
+ 	sdata->vif.type = IEEE80211_IF_TYPE_AP;
+--- a/net/mac80211/ieee80211_i.h	2008-04-15 19:38:02.000000000 -0700
++++ b/net/mac80211/ieee80211_i.h	2008-04-15 19:38:03.000000000 -0700
+@@ -421,6 +421,10 @@
+ 
+ 	struct wireless_dev wdev;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
++	struct net_device_stats stats;
++#endif
++
+ 	/* keys */
+ 	struct list_head key_list;
+ 
+@@ -553,7 +557,7 @@
+ 	return container_of(p, struct ieee80211_sub_if_data, vif);
+ }
+ 
+-#define IEEE80211_DEV_TO_SUB_IF(dev) netdev_priv(dev)
++#define IEEE80211_DEV_TO_SUB_IF(dev) ((struct ieee80211_sub_if_data *)netdev_priv(dev))
+ 
+ enum {
+ 	IEEE80211_RX_MSG	= 1,

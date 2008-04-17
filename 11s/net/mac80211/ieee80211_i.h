@@ -23,7 +23,7 @@
 #include <linux/spinlock.h>
 #include <linux/etherdevice.h>
 #include <net/wireless.h>
-#include "ieee80211_key.h"
+#include "key.h"
 #include "sta_info.h"
 
 /* ieee80211.o internal definitions, etc. These are not included into
@@ -35,9 +35,9 @@
 
 #define WLAN_FC_DATA_PRESENT(fc) (((fc) & 0x4c) == 0x08)
 
-struct ieee80211_local;
+#define IEEE80211_FC(type, subtype) cpu_to_le16(type | subtype)
 
-#define IEEE80211_ALIGN32_PAD(a) ((4 - ((a) & 3)) & 3)
+struct ieee80211_local;
 
 /* Maximum number of broadcast/multicast frames to buffer when some of the
  * associated stations are using power saving. */
@@ -73,11 +73,12 @@ struct ieee80211_fragment_entry {
 struct ieee80211_sta_bss {
 	struct list_head list;
 	struct ieee80211_sta_bss *hnext;
+	size_t ssid_len;
+
 	atomic_t users;
 
 	u8 bssid[ETH_ALEN];
 	u8 ssid[IEEE80211_MAX_SSID_LEN];
-	size_t ssid_len;
 	u16 capability; /* host byte order */
 	enum ieee80211_band band;
 	int freq;
@@ -98,8 +99,8 @@ struct ieee80211_sta_bss {
 #define IEEE80211_MAX_SUPP_RATES 32
 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
 	size_t supp_rates_len;
-	int beacon_int;
 	u64 timestamp;
+	int beacon_int;
 
 	int probe_resp;
 	unsigned long last_update;
@@ -154,9 +155,7 @@ struct ieee80211_tx_data {
 	struct ieee80211_local *local;
 	struct ieee80211_sub_if_data *sdata;
 	struct sta_info *sta;
-	u16 fc, ethertype;
 	struct ieee80211_key *key;
-	unsigned int flags;
 
 	struct ieee80211_tx_control *control;
 	struct ieee80211_channel *channel;
@@ -168,8 +167,11 @@ struct ieee80211_tx_data {
 
 	/* Extra fragments (in addition to the first fragment
 	 * in skb) */
-	int num_extra_frag;
 	struct sk_buff **extra_frag;
+	int num_extra_frag;
+
+	u16 fc, ethertype;
+	unsigned int flags;
 };
 
 
@@ -192,12 +194,12 @@ struct ieee80211_rx_data {
 	struct ieee80211_local *local;
 	struct ieee80211_sub_if_data *sdata;
 	struct sta_info *sta;
-	u16 fc, ethertype;
 	struct ieee80211_key *key;
-	unsigned int flags;
-
 	struct ieee80211_rx_status *status;
 	struct ieee80211_rate *rate;
+
+	u16 fc, ethertype;
+	unsigned int flags;
 	int sent_ps_buffered;
 	int queue;
 	int load;
@@ -222,9 +224,9 @@ struct ieee80211_tx_packet_data {
 struct ieee80211_tx_stored_packet {
 	struct ieee80211_tx_control control;
 	struct sk_buff *skb;
-	int num_extra_frag;
 	struct sk_buff **extra_frag;
 	struct ieee80211_rate *last_frag_rate;
+	int num_extra_frag;
 	unsigned int last_frag_rate_ctrl_probe;
 };
 
@@ -246,8 +248,8 @@ struct ieee80211_if_ap {
 	 * bitmap_empty :)
 	 * NB: don't touch this bitmap, use sta_info_{set,clear}_tim_bit */
 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
-	atomic_t num_sta_ps; /* number of stations in PS mode */
 	struct sk_buff_head ps_bc_buf;
+	atomic_t num_sta_ps; /* number of stations in PS mode */
 	int dtim_count;
 	int force_unicast_rateidx; /* forced TX rateidx for unicast frames */
 	int max_ratectrl_rateidx; /* max TX rateidx for rate control */
@@ -255,8 +257,8 @@ struct ieee80211_if_ap {
 };
 
 struct ieee80211_if_wds {
-	u8 remote_addr[ETH_ALEN];
 	struct sta_info *sta;
+	u8 remote_addr[ETH_ALEN];
 };
 
 struct ieee80211_if_vlan {
@@ -290,12 +292,12 @@ struct mesh_config {
 	u8  dot11MeshTTL;
 	bool auto_open_plinks;
 	/* HWMP parameters */
-	u32 dot11MeshHWMPactivePathTimeout;
-	u16 dot11MeshHWMPpreqMinInterval;
-	u16 dot11MeshHWMPnetDiameterTraversalTime;
 	u8  dot11MeshHWMPmaxPREQretries;
 	u32 path_refresh_time;
 	u16 min_discovery_timeout;
+	u32 dot11MeshHWMPactivePathTimeout;
+	u16 dot11MeshHWMPpreqMinInterval;
+	u16 dot11MeshHWMPnetDiameterTraversalTime;
 };
 
 
@@ -314,23 +316,22 @@ struct mesh_config {
 #define IEEE80211_STA_AUTO_CHANNEL_SEL	BIT(12)
 #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
 struct ieee80211_if_sta {
+	struct timer_list timer;
+	struct work_struct work;
+	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
+	u8 ssid[IEEE80211_MAX_SSID_LEN];
 	enum {
 		IEEE80211_DISABLED, IEEE80211_AUTHENTICATE,
 		IEEE80211_ASSOCIATE, IEEE80211_ASSOCIATED,
 		IEEE80211_IBSS_SEARCH, IEEE80211_IBSS_JOINED,
 		IEEE80211_MESH_UP
 	} state;
-	struct timer_list timer;
-	struct work_struct work;
-	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
-	u8 ssid[IEEE80211_MAX_SSID_LEN];
 	size_t ssid_len;
 	u8 scan_ssid[IEEE80211_MAX_SSID_LEN];
 	size_t scan_ssid_len;
 #ifdef CONFIG_MAC80211_MESH
 	struct timer_list mesh_path_timer;
 	u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
-	bool accepting_plinks;
 	size_t mesh_id_len;
 	/* Active Path Selection Protocol Identifier */
 	u8 mesh_pp_id[4];
@@ -354,6 +355,7 @@ struct ieee80211_if_sta {
 	struct mesh_stats mshstats;
 	struct mesh_config mshcfg;
 	u8 mesh_seqnum[3];
+	bool accepting_plinks;
 #endif
 	u16 aid;
 	u16 ap_capab, capab;
@@ -364,16 +366,18 @@ struct ieee80211_if_sta {
 	u8 *assocreq_ies, *assocresp_ies;
 	size_t assocreq_ies_len, assocresp_ies_len;
 
+	struct sk_buff_head skb_queue;
+
 	int auth_tries, assoc_tries;
+
+	unsigned long request;
+
+	unsigned long last_probe;
 
 	unsigned int flags;
 #define IEEE80211_STA_REQ_SCAN 0
 #define IEEE80211_STA_REQ_AUTH 1
 #define IEEE80211_STA_REQ_RUN  2
-	unsigned long request;
-	struct sk_buff_head skb_queue;
-
-	unsigned long last_probe;
 
 #define IEEE80211_AUTH_ALG_OPEN BIT(0)
 #define IEEE80211_AUTH_ALG_SHARED_KEY BIT(1)
@@ -600,12 +604,14 @@ struct ieee80211_local {
 	/*
 	 * The lock only protects the list, hash, timer and counter
 	 * against manipulation, reads are done in RCU. Additionally,
-	 * the lock protects each BSS's TIM bitmap and a few items
-	 * in a STA info structure.
+	 * the lock protects each BSS's TIM bitmap, a few items in
+	 * STA info structures and various key pointers.
 	 */
 	spinlock_t sta_lock;
 	unsigned long num_sta;
 	struct list_head sta_list;
+	struct list_head sta_flush_list;
+	struct work_struct sta_flush_work;
 	struct sta_info *sta_hash[STA_HASH_SIZE];
 	struct timer_list sta_cleanup;
 
@@ -863,9 +869,9 @@ int ieee80211_if_config(struct net_device *dev);
 int ieee80211_if_config_beacon(struct net_device *dev);
 void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
 void ieee80211_if_setup(struct net_device *dev);
-int ieee80211_hw_config_ht(struct ieee80211_local *local, int enable_ht,
-			   struct ieee80211_ht_info *req_ht_cap,
-			   struct ieee80211_ht_bss_info *req_bss_cap);
+u32 ieee80211_handle_ht(struct ieee80211_local *local, int enable_ht,
+			struct ieee80211_ht_info *req_ht_cap,
+			struct ieee80211_ht_bss_info *req_bss_cap);
 
 /* ieee80211_ioctl.c */
 extern const struct iw_handler_def ieee80211_iw_handler_def;
@@ -891,11 +897,8 @@ extern const struct iw_handler_def ieee80211_iw_handler_def;
 
 
 /* ieee80211_ioctl.c */
-int ieee80211_set_compression(struct ieee80211_local *local,
-			      struct net_device *dev, struct sta_info *sta);
 int ieee80211_set_freq(struct ieee80211_local *local, int freq);
 /* ieee80211_sta.c */
-#define IEEE80211_FC(type, stype) cpu_to_le16(type | stype)
 void ieee80211_sta_timer(unsigned long data);
 void ieee80211_sta_work(struct work_struct *work);
 void ieee80211_sta_scan_work(struct work_struct *work);
@@ -932,10 +935,12 @@ void ieee80211_send_addba_request(struct net_device *dev, const u8 *da,
 				  u16 agg_size, u16 timeout);
 void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
 				u16 initiator, u16 reason_code);
+
 void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *da,
 				u16 tid, u16 initiator, u16 reason);
 void sta_rx_agg_session_timer_expired(unsigned long data);
 void sta_addba_resp_timer_expired(unsigned long data);
+void ieee80211_sta_tear_down_BA_sessions(struct net_device *dev, u8 *addr);
 u64 ieee80211_sta_get_rates(struct ieee80211_local *local,
 			    struct ieee802_11_elems *elems,
 			    enum ieee80211_band band);

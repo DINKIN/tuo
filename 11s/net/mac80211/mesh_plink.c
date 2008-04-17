@@ -9,7 +9,7 @@
 #include <linux/kernel.h>
 #include <linux/random.h>
 #include "ieee80211_i.h"
-#include "ieee80211_rate.h"
+#include "rate.h"
 #include "mesh.h"
 
 #ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
@@ -18,7 +18,6 @@
 #define mpl_dbg(fmt, args...)	do { (void)(0); } while (0)
 #endif
 
-#define IEEE80211_FC(type, stype) cpu_to_le16(type | stype)
 #define PLINK_GET_FRAME_SUBTYPE(p) (p)
 #define PLINK_GET_LLID(p) (p + 1)
 #define PLINK_GET_PLID(p) (p + 3)
@@ -89,6 +88,10 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
 	sta->plink_retries = 0;
 }
 
+/*
+ * NOTE: This is just an alias for sta_info_alloc(), see notes
+ *       on it in the lifecycle management section!
+ */
 static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
 					 u8 *hw_addr, u64 rates)
 {
@@ -235,7 +238,6 @@ void mesh_neighbour_update(u8 *hw_addr, u64 rates, struct net_device *dev,
 			return;
 		}
 		if (sta_info_insert(sta)) {
-			sta_info_destroy(sta);
 			rcu_read_unlock();
 			return;
 		}
@@ -506,7 +508,6 @@ void mesh_rx_plink_frame(struct net_device *dev, struct ieee80211_mgmt *mgmt,
 			return;
 		}
 		if (sta_info_insert(sta)) {
-			sta_info_destroy(sta);
 			rcu_read_unlock();
 			return;
 		}
