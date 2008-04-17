@@ -17,7 +17,7 @@ MODULES="$MODULES rt2400pci rt2500pci rt61pci"
 MODULES="$MODULES rt2500usb rt73usb"
 MODULES="$MODULES rt2x00usb rt2x00lib"
 MODULES="$MODULES rtl8180 rtl8187"
-MODULES="$MODULES rndis_wlan"
+MODULES="$MODULES rndis_wlan at76_usb"
 # eeprom_93cx6 is used by rt2x00 (rt61pci, rt2500pci, rt2400pci) 
 # and Realtek drivers ( rtl8187, rtl8180)
 MODULES="$MODULES eeprom_93cx6"

@@ -99,7 +99,11 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
 	/*
 	 * Determine which queue to put packet on.
 	 */
-	queue = rt2x00queue_get_queue(rt2x00dev, control->queue);
+	if (control->flags & IEEE80211_TXCTL_SEND_AFTER_DTIM &&
+	    test_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags))
+		queue = rt2x00queue_get_queue(rt2x00dev, RT2X00_BCN_QUEUE_ATIM);
+	else
+		queue = rt2x00queue_get_queue(rt2x00dev, control->queue);
 	if (unlikely(!queue)) {
 		ERROR(rt2x00dev,
 		      "Attempt to send packet over invalid queue %d.\n"
@@ -249,6 +253,13 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
 	 */
 	rt2x00lib_config_intf(rt2x00dev, intf, conf->type, intf->mac, NULL);
 
+	/*
+	 * Some filters depend on the current working mode. We can force
+	 * an update during the next configure_filter() run by mac80211 by
+	 * resetting the current packet_filter state.
+	 */
+	rt2x00dev->packet_filter = 0;
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(rt2x00mac_add_interface);
@@ -376,6 +387,50 @@ int rt2x00mac_config_interface(struct ieee80211_hw *hw,
 }
 EXPORT_SYMBOL_GPL(rt2x00mac_config_interface);
 
+void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
+				unsigned int changed_flags,
+				unsigned int *total_flags,
+				int mc_count, struct dev_addr_list *mc_list)
+{
+	struct rt2x00_dev *rt2x00dev = hw->priv;
+
+	/*
+	 * Mask off any flags we are going to ignore
+	 * from the total_flags field.
+	 */
+	*total_flags &=
+	    FIF_ALLMULTI |
+	    FIF_FCSFAIL |
+	    FIF_PLCPFAIL |
+	    FIF_CONTROL |
+	    FIF_OTHER_BSS |
+	    FIF_PROMISC_IN_BSS;
+
+	/*
+	 * Apply some rules to the filters:
+	 * - Some filters imply different filters to be set.
+	 * - Some things we can't filter out at all.
+	 * - Multicast filter seems to kill broadcast traffic so never use it.
+	 */
+	*total_flags |= FIF_ALLMULTI;
+	if (*total_flags & FIF_OTHER_BSS ||
+	    *total_flags & FIF_PROMISC_IN_BSS)
+		*total_flags |= FIF_PROMISC_IN_BSS | FIF_OTHER_BSS;
+
+	/*
+	 * Check if there is any work left for us.
+	 */
+	if (rt2x00dev->packet_filter == *total_flags)
+		return;
+	rt2x00dev->packet_filter = *total_flags;
+
+	if (!test_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags))
+		rt2x00dev->ops->lib->config_filter(rt2x00dev, *total_flags);
+	else
+		queue_work(rt2x00dev->hw->workqueue, &rt2x00dev->filter_work);
+}
+EXPORT_SYMBOL_GPL(rt2x00mac_configure_filter);
+
 int rt2x00mac_get_stats(struct ieee80211_hw *hw,
 			struct ieee80211_low_level_stats *stats)
 {
@@ -415,6 +470,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
 {
 	struct rt2x00_dev *rt2x00dev = hw->priv;
 	struct rt2x00_intf *intf = vif_to_intf(vif);
+	unsigned int delayed = 0;
 
 	/*
 	 * When the association status has changed we must reset the link
@@ -429,20 +485,32 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
 			rt2x00dev->intf_associated++;
 		else
 			rt2x00dev->intf_associated--;
+
+		if (!test_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags))
+			rt2x00leds_led_assoc(rt2x00dev,
+					     !!rt2x00dev->intf_associated);
+		else
+			delayed |= DELAYED_LED_ASSOC;
 	}
 
 	/*
-	 * When the preamble mode has changed, we should perform additional
-	 * configuration steps. For all other changes we are already done.
+	 * When the erp information has changed, we should perform
+	 * additional configuration steps. For all other changes we are done.
 	 */
 	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
-		rt2x00lib_config_preamble(rt2x00dev, intf,
-					  bss_conf->use_short_preamble);
-
-		spin_lock(&intf->lock);
-		memcpy(&intf->conf, bss_conf, sizeof(*bss_conf));
-		spin_unlock(&intf->lock);
+		if (!test_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags))
+			rt2x00lib_config_erp(rt2x00dev, intf, bss_conf);
+		else
+			delayed |= DELAYED_CONFIG_ERP;
 	}
+
+	spin_lock(&intf->lock);
+	memcpy(&intf->conf, bss_conf, sizeof(*bss_conf));
+	if (delayed) {
+		intf->delayed_flags |= delayed;
+		queue_work(rt2x00dev->hw->workqueue, &rt2x00dev->intf_work);
+	}
+	spin_unlock(&intf->lock);
 }
 EXPORT_SYMBOL_GPL(rt2x00mac_bss_info_changed);
 

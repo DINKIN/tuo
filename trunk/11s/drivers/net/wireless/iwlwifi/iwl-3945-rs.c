@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2005 - 2007 Intel Corporation. All rights reserved.
+ * Copyright(c) 2005 - 2008 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -37,7 +37,7 @@
 
 #include <linux/workqueue.h>
 
-#include "../net/mac80211/ieee80211_rate.h"
+#include "../net/mac80211/rate.h"
 
 #include "iwl-3945.h"
 
@@ -976,12 +976,12 @@ void iwl3945_rate_scale_init(struct ieee80211_hw *hw, s32 sta_id)
 		       iwl3945_rates[rs_sta->start_rate].plcp);
 }
 
-void iwl3945_rate_control_register(struct ieee80211_hw *hw)
+int iwl3945_rate_control_register(void)
 {
-	ieee80211_rate_control_register(&rs_ops);
+	return ieee80211_rate_control_register(&rs_ops);
 }
 
-void iwl3945_rate_control_unregister(struct ieee80211_hw *hw)
+void iwl3945_rate_control_unregister(void)
 {
 	ieee80211_rate_control_unregister(&rs_ops);
 }

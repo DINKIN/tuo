@@ -4,13 +4,13 @@ export
 ## Make sure to have each variable declaration start
 ## in the first column, no whitespace allowed.
 
-ifeq ($(wildcard $(KLIB)/.config),)
+ifeq ($(wildcard $(KLIB_BUILD)/.config),)
 # These will be ignored by compat autoconf
  CONFIG_PCI=y
  CONFIG_USB=y
  CONFIG_PCMCIA=y
 else
-include $(KLIB)/.config
+include $(KLIB_BUILD)/.config
 endif
 
 # Wireless subsystem stuff
@@ -18,10 +18,6 @@ CONFIG_MAC80211=m
 
 CONFIG_MAC80211_RC_DEFAULT=pid
 CONFIG_MAC80211_RC_PID=y
-# Comment above and uncomment below if you are having issues with
-# the rate pid control algorithm.
-#CONFIG_MAC80211_RC_DEFAULT=simple
-#CONFIG_MAC80211_RC_SIMPLE=y
 
 # enable mesh networking too
 CONFIG_MAC80211_MESH=y
@@ -34,8 +30,10 @@ ifneq ($(CONFIG_PCI),)
 
 CONFIG_ATH5K=m
 CONFIG_ATH5K_DEBUG=n
+CONFIG_IWLCORE=m
 CONFIG_IWL3945=m
 CONFIG_IWL4965=m
+CONFIG_IWL4965_HT=y
 CONFIG_B43=m
 # B43 uses PCMCIA only for Compact Flash. The Cardbus cards uses PCI
 # Example, bcm4318:
@@ -43,6 +41,8 @@ CONFIG_B43=m
 CONFIG_B43_PCMCIA=y
 CONFIG_B43_DMA=y
 CONFIG_B43_PIO=y
+# B43_PIO selects SSB_BLOCKIO
+CONFIG_SSB_BLOCKIO=y
 CONFIG_B43_DMA_AND_PIO_MODE=y
 CONFIG_B43_PCI_AUTOSELECT=y
 CONFIG_B43_PCICORE_AUTOSELECT=y
@@ -59,11 +59,11 @@ CONFIG_B43LEGACY_DMA_AND_PIO_MODE=y
 
 # The Intel ipws
 CONFIG_IPW2100=m
-IPW2100_MONITOR=y
+CONFIG_IPW2100_MONITOR=y
 CONFIG_IPW2200=m
-IPW2200_MONITOR=y
-IPW2200_RADIOTAP=y
-IPW2200_PROMISCUOUS=y
+CONFIG_IPW2200_MONITOR=y
+CONFIG_IPW2200_RADIOTAP=y
+CONFIG_IPW2200_PROMISCUOUS=y
 # The above enables use a second interface prefixed 'rtap'.
 #           Example usage:
 #
@@ -76,7 +76,7 @@ IPW2200_PROMISCUOUS=y
 # it on via sysfs:
 #
 # % echo 1 > /sys/bus/pci/drivers/ipw2200/*/rtap_iface
-IPW2200_QOS=y
+CONFIG_IPW2200_QOS=y
 
 NEED_IEEE80211=y
 
@@ -86,6 +86,7 @@ CONFIG_SSB_PCIHOST_POSSIBLE=y
 CONFIG_SSB_PCIHOST=y
 CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
 CONFIG_SSB_DRIVER_PCICORE=y
+CONFIG_SSB_B43_PCI_BRIDGE=y
 
 CONFIG_RTL8180=m
 CONFIG_ADM8211=m
@@ -113,8 +114,16 @@ CONFIG_EEPROM_93CX6=m
 ifneq ($(CONFIG_USB),)
 CONFIG_ZD1211RW=m
 
-# Sorry, it uses cancel_work_sync which is new and can't be done in compat...
-ifeq ($(shell test $(shell sed 's/^SUBLEVEL = //;t;d' < $(KLIB_BUILD)/Makefile) -gt 21 && echo yes),yes)
+# support for USB Wireless devices using Atmel at76c503,
+# at76c505 or at76c505a chips.
+CONFIG_USB_ATMEL=m
+
+# Stuff here things which depend on kernel versions for USB
+ifeq ($(shell test -e $(KLIB_BUILD)/Makefile && echo yes),yes)
+KERNEL_SUBLEVEL = $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+ifeq ($(shell test $(KERNEL_SUBLEVEL) -gt 21 && echo yes),yes)
+
+# Sorry, rndis_wlan uses cancel_work_sync which is new and can't be done in compat...
 
 # Wireless RNDIS USB support (RTL8185 802.11g) A-Link WL54PC
 # All of these devices are based on Broadcom 4320 chip which
@@ -125,12 +134,14 @@ CONFIG_USB_NET_RNDIS_HOST=m
 CONFIG_USB_NET_RNDIS_WLAN=m
 
 endif
+endif
 
 CONFIG_P54_USB=m
 CONFIG_RTL8187=m
 
 # RT2500USB does not require firmware
 CONFIG_RT2500USB=m
+CONFIG_RT2X00_LIB_USB=m
 NEED_RT2X00=y
 # RT73USB requires firmware
 ifneq ($(CONFIG_CRC_ITU_T),)
@@ -144,12 +155,12 @@ endif # end of USB driver list
 ifeq ($(NEED_RT2X00),y)
 CONFIG_RT2X00=m
 CONFIG_RT2X00_LIB=m
+# CONFIG_RT2X00_LIB_DEBUGFS is not set
+# CONFIG_RT2X00_DEBUG is not set
 endif
 
 ifeq ($(NEED_RT2X00_FIRMWARE),y)
 CONFIG_RT2X00_LIB_FIRMWARE=y
-# CONFIG_RT2X00_LIB_DEBUGFS is not set
-# CONFIG_RT2X00_DEBUG is not set
 endif
 
 # p54
@@ -158,6 +169,7 @@ CONFIG_P54_COMMON=m
 # Sonics Silicon Backplane
 CONFIG_SSB_POSSIBLE=y
 CONFIG_SSB=m
+CONFIG_SSB_SPROM=y
 
 ifneq ($(CONFIG_PCMCIA),)
 CONFIG_SSB_PCMCIAHOST=y

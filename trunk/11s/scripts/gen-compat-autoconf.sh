@@ -127,9 +127,9 @@ for i in $(grep '^CONFIG_' $COMPAT_CONFIG); do
 	VALUE=$(echo $i | cut -d"=" -f 2)
 
 	# skip vars that weren't actually set due to dependencies
-	if [ "${!VAR}" = "" ] ; then
-		continue
-	fi
+	#if [ "${!VAR}" = "" ] ; then
+	#	continue
+	#fi
 
 	# Handle core kernel module depenencies here.
 	case $VAR in

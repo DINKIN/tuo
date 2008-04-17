@@ -108,10 +108,12 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
 	/*
 	 * Enable radio.
 	 */
-	status = rt2x00dev->ops->lib->set_device_state(rt2x00dev,
-						       STATE_RADIO_ON);
+	status =
+	    rt2x00dev->ops->lib->set_device_state(rt2x00dev, STATE_RADIO_ON);
 	if (status)
 		return status;
+
+	rt2x00leds_led_radio(rt2x00dev, true);
 
 	__set_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags);
 
@@ -155,6 +157,7 @@ void rt2x00lib_disable_radio(struct rt2x00_dev *rt2x00dev)
 	 * Disable radio.
 	 */
 	rt2x00dev->ops->lib->set_device_state(rt2x00dev, STATE_RADIO_OFF);
+	rt2x00leds_led_radio(rt2x00dev, false);
 }
 
 void rt2x00lib_toggle_rx(struct rt2x00_dev *rt2x00dev, enum dev_state state)
@@ -401,18 +404,8 @@ static void rt2x00lib_packetfilter_scheduled(struct work_struct *work)
 {
 	struct rt2x00_dev *rt2x00dev =
 	    container_of(work, struct rt2x00_dev, filter_work);
-	unsigned int filter = rt2x00dev->packet_filter;
 
-	/*
-	 * Since we had stored the filter inside rt2x00dev->packet_filter,
-	 * we should now clear that field. Otherwise the driver will
-	 * assume nothing has changed (*total_flags will be compared
-	 * to rt2x00dev->packet_filter to determine if any action is required).
-	 */
-	rt2x00dev->packet_filter = 0;
-
-	rt2x00dev->ops->hw->configure_filter(rt2x00dev->hw,
-					     filter, &filter, 0, NULL);
+	rt2x00dev->ops->lib->config_filter(rt2x00dev, rt2x00dev->packet_filter);
 }
 
 static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
@@ -447,9 +440,11 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
 		}
 	}
 
-	if (delayed_flags & DELAYED_CONFIG_PREAMBLE)
-		rt2x00lib_config_preamble(rt2x00dev, intf,
-					  intf->conf.use_short_preamble);
+	if (delayed_flags & DELAYED_CONFIG_ERP)
+		rt2x00lib_config_erp(rt2x00dev, intf, &intf->conf);
+
+	if (delayed_flags & DELAYED_LED_ASSOC)
+		rt2x00leds_led_assoc(rt2x00dev, !!rt2x00dev->intf_associated);
 }
 
 static void rt2x00lib_intf_scheduled(struct work_struct *work)
@@ -521,7 +516,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
 	tx_status.ack_signal = 0;
 	tx_status.excessive_retries = (txdesc->status == TX_FAIL_RETRY);
 	tx_status.retry_count = txdesc->retry;
-	memcpy(&tx_status.control, txdesc->control, sizeof(txdesc->control));
+	memcpy(&tx_status.control, txdesc->control, sizeof(*txdesc->control));
 
 	if (!(tx_status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
 		if (success)
@@ -581,16 +576,20 @@ void rt2x00lib_rxdone(struct queue_entry *entry,
 	for (i = 0; i < sband->n_bitrates; i++) {
 		rate = rt2x00_get_rate(sband->bitrates[i].hw_value);
 
-		/*
-		 * When frame was received with an OFDM bitrate,
-		 * the signal is the PLCP value. If it was received with
-		 * a CCK bitrate the signal is the rate in 100kbit/s.
-		 */
-		if ((rxdesc->ofdm && rate->plcp == rxdesc->signal) ||
-		    (!rxdesc->ofdm && rate->bitrate == rxdesc->signal)) {
+		if (((rxdesc->dev_flags & RXDONE_SIGNAL_PLCP) &&
+		     (rate->plcp == rxdesc->signal)) ||
+		    (!(rxdesc->dev_flags & RXDONE_SIGNAL_PLCP) &&
+		      (rate->bitrate == rxdesc->signal))) {
 			idx = i;
 			break;
 		}
+	}
+
+	if (idx < 0) {
+		WARNING(rt2x00dev, "Frame received with unrecognized signal,"
+			"signal=0x%.2x, plcp=%d.\n", rxdesc->signal,
+			!!(rxdesc->dev_flags & RXDONE_SIGNAL_PLCP));
+		idx = 0;
 	}
 
 	/*
@@ -598,7 +597,7 @@ void rt2x00lib_rxdone(struct queue_entry *entry,
 	 */
 	hdr = (struct ieee80211_hdr *)entry->skb->data;
 	fc = le16_to_cpu(hdr->frame_control);
-	if (is_beacon(fc) && rxdesc->my_bss)
+	if (is_beacon(fc) && (rxdesc->dev_flags & RXDONE_MY_BSS))
 		rt2x00lib_update_link_stats(&rt2x00dev->link, rxdesc->rssi);
 
 	rt2x00dev->link.qual.rx_success++;
@@ -630,7 +629,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
 {
 	struct txentry_desc txdesc;
 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skbdesc->data;
 	const struct rt2x00_rate *rate;
 	int tx_rate;
 	int length;
@@ -710,7 +709,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
 	txdesc.signal = rate->plcp;
 	txdesc.service = 0x04;
 
-	length = skb->len + FCS_LEN;
+	length = skbdesc->data_len + FCS_LEN;
 	if (rate->flags & DEV_RATE_OFDM) {
 		__set_bit(ENTRY_TXD_OFDM_RATE, &txdesc.flags);
 
@@ -767,75 +766,75 @@ EXPORT_SYMBOL_GPL(rt2x00lib_write_tx_desc);
  */
 const struct rt2x00_rate rt2x00_supported_rates[12] = {
 	{
-		.flags = DEV_RATE_CCK,
+		.flags = DEV_RATE_CCK | DEV_RATE_BASIC,
 		.bitrate = 10,
-		.ratemask = DEV_RATEMASK_1MB,
+		.ratemask = BIT(0),
 		.plcp = 0x00,
 	},
 	{
-		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE,
+		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE | DEV_RATE_BASIC,
 		.bitrate = 20,
-		.ratemask = DEV_RATEMASK_2MB,
+		.ratemask = BIT(1),
 		.plcp = 0x01,
 	},
 	{
-		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE,
+		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE | DEV_RATE_BASIC,
 		.bitrate = 55,
-		.ratemask = DEV_RATEMASK_5_5MB,
+		.ratemask = BIT(2),
 		.plcp = 0x02,
 	},
 	{
-		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE,
+		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE | DEV_RATE_BASIC,
 		.bitrate = 110,
-		.ratemask = DEV_RATEMASK_11MB,
+		.ratemask = BIT(3),
 		.plcp = 0x03,
 	},
 	{
-		.flags = DEV_RATE_OFDM,
+		.flags = DEV_RATE_OFDM | DEV_RATE_BASIC,
 		.bitrate = 60,
-		.ratemask = DEV_RATEMASK_6MB,
+		.ratemask = BIT(4),
 		.plcp = 0x0b,
 	},
 	{
 		.flags = DEV_RATE_OFDM,
 		.bitrate = 90,
-		.ratemask = DEV_RATEMASK_9MB,
+		.ratemask = BIT(5),
 		.plcp = 0x0f,
 	},
 	{
-		.flags = DEV_RATE_OFDM,
+		.flags = DEV_RATE_OFDM | DEV_RATE_BASIC,
 		.bitrate = 120,
-		.ratemask = DEV_RATEMASK_12MB,
+		.ratemask = BIT(6),
 		.plcp = 0x0a,
 	},
 	{
 		.flags = DEV_RATE_OFDM,
 		.bitrate = 180,
-		.ratemask = DEV_RATEMASK_18MB,
+		.ratemask = BIT(7),
 		.plcp = 0x0e,
 	},
 	{
-		.flags = DEV_RATE_OFDM,
+		.flags = DEV_RATE_OFDM | DEV_RATE_BASIC,
 		.bitrate = 240,
-		.ratemask = DEV_RATEMASK_24MB,
+		.ratemask = BIT(8),
 		.plcp = 0x09,
 	},
 	{
 		.flags = DEV_RATE_OFDM,
 		.bitrate = 360,
-		.ratemask = DEV_RATEMASK_36MB,
+		.ratemask = BIT(9),
 		.plcp = 0x0d,
 	},
 	{
 		.flags = DEV_RATE_OFDM,
 		.bitrate = 480,
-		.ratemask = DEV_RATEMASK_48MB,
+		.ratemask = BIT(10),
 		.plcp = 0x08,
 	},
 	{
 		.flags = DEV_RATE_OFDM,
 		.bitrate = 540,
-		.ratemask = DEV_RATEMASK_54MB,
+		.ratemask = BIT(11),
 		.plcp = 0x0c,
 	},
 };
@@ -1000,7 +999,7 @@ static void rt2x00lib_uninitialize(struct rt2x00_dev *rt2x00dev)
 		return;
 
 	/*
-	 * Unregister rfkill.
+	 * Unregister extra components.
 	 */
 	rt2x00rfkill_unregister(rt2x00dev);
 
@@ -1039,11 +1038,9 @@ static int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
 	__set_bit(DEVICE_INITIALIZED, &rt2x00dev->flags);
 
 	/*
-	 * Register the rfkill handler.
+	 * Register the extra components.
 	 */
-	status = rt2x00rfkill_register(rt2x00dev);
-	if (status)
-		goto exit;
+	rt2x00rfkill_register(rt2x00dev);
 
 	return 0;
 
@@ -1157,20 +1154,10 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
 	}
 
 	/*
-	 * Register LED.
+	 * Register extra components.
 	 */
 	rt2x00leds_register(rt2x00dev);
-
-	/*
-	 * Allocatie rfkill.
-	 */
-	retval = rt2x00rfkill_allocate(rt2x00dev);
-	if (retval)
-		goto exit;
-
-	/*
-	 * Open the debugfs entry.
-	 */
+	rt2x00rfkill_allocate(rt2x00dev);
 	rt2x00debug_register(rt2x00dev);
 
 	__set_bit(DEVICE_PRESENT, &rt2x00dev->flags);
@@ -1199,18 +1186,10 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
 	rt2x00lib_uninitialize(rt2x00dev);
 
 	/*
-	 * Close debugfs entry.
+	 * Free extra components
 	 */
 	rt2x00debug_deregister(rt2x00dev);
-
-	/*
-	 * Free rfkill
-	 */
 	rt2x00rfkill_free(rt2x00dev);
-
-	/*
-	 * Free LED.
-	 */
 	rt2x00leds_unregister(rt2x00dev);
 
 	/*
@@ -1249,21 +1228,34 @@ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
 	__set_bit(DEVICE_STARTED_SUSPEND, &rt2x00dev->flags);
 
 	/*
-	 * Disable radio and unitialize all items
-	 * that must be recreated on resume.
+	 * Disable radio.
 	 */
 	rt2x00lib_stop(rt2x00dev);
 	rt2x00lib_uninitialize(rt2x00dev);
+
+	/*
+	 * Suspend/disable extra components.
+	 */
 	rt2x00leds_suspend(rt2x00dev);
+	rt2x00rfkill_suspend(rt2x00dev);
 	rt2x00debug_deregister(rt2x00dev);
 
 exit:
 	/*
-	 * Set device mode to sleep for power management.
+	 * Set device mode to sleep for power management,
+	 * on some hardware this call seems to consistently fail.
+	 * From the specifications it is hard to tell why it fails,
+	 * and if this is a "bad thing".
+	 * Overall it is safe to just ignore the failure and
+	 * continue suspending. The only downside is that the
+	 * device will not be in optimal power save mode, but with
+	 * the radio and the other components already disabled the
+	 * device is as good as disabled.
 	 */
 	retval = rt2x00dev->ops->lib->set_device_state(rt2x00dev, STATE_SLEEP);
 	if (retval)
-		return retval;
+		WARNING(rt2x00dev, "Device failed to enter sleep state, "
+			"continue suspending.\n");
 
 	return 0;
 }
@@ -1298,9 +1290,10 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
 	NOTICE(rt2x00dev, "Waking up.\n");
 
 	/*
-	 * Open the debugfs entry and restore led handling.
+	 * Restore/enable extra components.
 	 */
 	rt2x00debug_register(rt2x00dev);
+	rt2x00rfkill_resume(rt2x00dev);
 	rt2x00leds_resume(rt2x00dev);
 
 	/*

@@ -195,6 +195,8 @@ struct cmd_ds_802_11_scan_rsp {
 };
 
 struct cmd_ds_802_11_get_log {
+	struct cmd_header hdr;
+
 	__le32 mcasttxframe;
 	__le32 failed;
 	__le32 retry;
@@ -211,8 +213,9 @@ struct cmd_ds_802_11_get_log {
 };
 
 struct cmd_ds_mac_control {
+	struct cmd_header hdr;
 	__le16 action;
-	__le16 reserved;
+	u16 reserved;
 };
 
 struct cmd_ds_mac_multicast_adr {
@@ -424,6 +427,8 @@ struct cmd_ds_802_11_rssi_rsp {
 };
 
 struct cmd_ds_802_11_mac_address {
+	struct cmd_header hdr;
+
 	__le16 action;
 	u8 macadd[ETH_ALEN];
 };
@@ -475,14 +480,11 @@ struct cmd_ds_802_11_ps_mode {
 	__le16 locallisteninterval;
 };
 
-struct PS_CMD_ConfirmSleep {
-	__le16 command;
-	__le16 size;
-	__le16 seqnum;
-	__le16 result;
+struct cmd_confirm_sleep {
+	struct cmd_header hdr;
 
 	__le16 action;
-	__le16 reserved1;
+	__le16 nullpktinterval;
 	__le16 multipledtim;
 	__le16 reserved;
 	__le16 locallisteninterval;
@@ -583,12 +585,13 @@ struct cmd_ds_802_11_key_material {
 } __attribute__ ((packed));
 
 struct cmd_ds_802_11_eeprom_access {
+	struct cmd_header hdr;
 	__le16 action;
-
-	/* multiple 4 */
 	__le16 offset;
-	__le16 bytecount;
-	u8 value;
+	__le16 len;
+	/* firmware says it returns a maximum of 20 bytes */
+#define LBS_EEPROM_READ_LEN 20
+	u8 value[LBS_EEPROM_READ_LEN];
 } __attribute__ ((packed));
 
 struct cmd_ds_802_11_tpc_cfg {
@@ -604,14 +607,6 @@ struct cmd_ds_802_11_led_ctrl {
 	__le16 action;
 	__le16 numled;
 	u8 data[256];
-} __attribute__ ((packed));
-
-struct cmd_ds_802_11_pwr_cfg {
-	__le16 action;
-	u8 enable;
-	s8 PA_P0;
-	s8 PA_P1;
-	s8 PA_P2;
 } __attribute__ ((packed));
 
 struct cmd_ds_802_11_afc {
@@ -695,13 +690,11 @@ struct cmd_ds_command {
 	/* command Body */
 	union {
 		struct cmd_ds_802_11_ps_mode psmode;
-		struct cmd_ds_mac_control macctrl;
 		struct cmd_ds_802_11_associate associate;
 		struct cmd_ds_802_11_deauthenticate deauth;
 		struct cmd_ds_802_11_ad_hoc_start ads;
 		struct cmd_ds_802_11_reset reset;
 		struct cmd_ds_802_11_ad_hoc_result result;
-		struct cmd_ds_802_11_get_log glog;
 		struct cmd_ds_802_11_authenticate auth;
 		struct cmd_ds_802_11_get_stat gstat;
 		struct cmd_ds_802_3_get_stat gstat_8023;
@@ -715,17 +708,14 @@ struct cmd_ds_command {
 		struct cmd_ds_802_11_rssi rssi;
 		struct cmd_ds_802_11_rssi_rsp rssirsp;
 		struct cmd_ds_802_11_disassociate dassociate;
-		struct cmd_ds_802_11_mac_address macadd;
 		struct cmd_ds_mac_reg_access macreg;
 		struct cmd_ds_bbp_reg_access bbpreg;
 		struct cmd_ds_rf_reg_access rfreg;
-		struct cmd_ds_802_11_eeprom_access rdeeprom;
 
 		struct cmd_ds_802_11d_domain_info domaininfo;
 		struct cmd_ds_802_11d_domain_info domaininforesp;
 
 		struct cmd_ds_802_11_tpc_cfg tpccfg;
-		struct cmd_ds_802_11_pwr_cfg pwrcfg;
 		struct cmd_ds_802_11_afc afc;
 		struct cmd_ds_802_11_led_ctrl ledgpio;
 
