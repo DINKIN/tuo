@@ -7,6 +7,9 @@
     # On-demand HWMP + broadcast by controlled flooding.
     # Airtime link metric and per-peer rate adaptation
   # Multi-Radio.  (Scott) (June)
+    # Routing table modify
+    # HWMP
+    # Peer link management
   # Multi-Channel.  (Scott) (June)
   # Support AP.  (Scott) (July)
   # QoS Support.  (Scott)
