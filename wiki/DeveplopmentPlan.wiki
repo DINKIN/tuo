@@ -1,12 +1,13 @@
   # Build development environment. (Finish)
   # Customize kernel configuration file, deploy 11s to mini-box and soekris. Install the testbed environment, demo and documentation. (Scott)
   # Security Function. (jerry)
-  # Open11s works on ath5k
+  # Open11s works on ath5k (Scott) (May)
     # sending beacon (2008.4.16 finished)
     # Peer link management protocol.
     # On-demand HWMP + broadcast by controlled flooding.
     # Airtime link metric and per-peer rate adaptation
-  # Support AP.  (Scott)
-  # Multi-Radio.  (Scott)
-  # Multi-Channel.  (Scott)
+  # Multi-Radio.  (Scott) (June)
+  # Multi-Channel.  (Scott) (June)
+  # Support AP.  (Scott) (July)
   # QoS Support.  (Scott)
+  # inter-network support. (Scott)
