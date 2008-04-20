@@ -102,7 +102,7 @@ struct ieee80211_sta_bss {
 	u64 timestamp;
 	int beacon_int;
 
-	int probe_resp;
+	bool probe_resp;
 	unsigned long last_update;
 
 	/* during assocation, we save an ERP value from a probe response so
@@ -604,8 +604,7 @@ struct ieee80211_local {
 	/*
 	 * The lock only protects the list, hash, timer and counter
 	 * against manipulation, reads are done in RCU. Additionally,
-	 * the lock protects each BSS's TIM bitmap, a few items in
-	 * STA info structures and various key pointers.
+	 * the lock protects each BSS's TIM bitmap.
 	 */
 	spinlock_t sta_lock;
 	unsigned long num_sta;
@@ -638,6 +637,13 @@ struct ieee80211_local {
 			     * media and to the local net stack */
 
 	struct list_head interfaces;
+
+	/*
+	 * Key lock, protects sdata's key_list and sta_info's
+	 * key pointers (write access, they're RCU.)
+	 */
+	spinlock_t key_lock;
+
 
 	bool sta_sw_scanning;
 	bool sta_hw_scanning;
