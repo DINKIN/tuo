@@ -1,0 +1,7 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+  * read the README file.
+  * copy defconfig to .config.Then change the configuration
+  * install libssl-dev. apt-get install libssl-dev
