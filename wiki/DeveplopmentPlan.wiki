@@ -27,6 +27,7 @@ mac80211中的802.11s实现是现在目前唯一能够找到的开源802.11s实�
 第一步需要考察一下阿德利亚使用的是哪个方案，还有就是目前的Mesh产品使用的是什么方案。
 
 
+= 开发计划 =
   # Build development environment. (Finish)
   # Customize kernel configuration file, deploy 11s to mini-box and soekris. Install the testbed environment, demo and documentation. (Scott)
   # Security Function. (jerry)
