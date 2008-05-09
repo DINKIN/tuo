@@ -1,11 +1,12 @@
 = Driver to Hostapd =
 
   # Application layer use Rtnetlink (Netlink, which is used to transfer information between kernel and userspace processes).
+
 {{{
 rtnetlink_socket = socket(PF_NETLINK, int socket_type, NETLINK_ROUTE); 
 }}}
 
-  # kernel is supported by Wireless Extensions APIs
+  # kernel is supported by Wireless Extensions APIs ( linux/net/wireless/wext.c )
 
 {{{
 1181/* ---------------------------------------------------------------- */
