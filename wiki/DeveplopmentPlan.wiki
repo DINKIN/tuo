@@ -31,7 +31,7 @@ mac80211中的802.11s实现是现在目前唯一能够找到的开源802.11s实�
   # Build development environment. (Finish)
   # Customize kernel configuration file, deploy 11s to mini-box and soekris. Install the testbed environment, demo and documentation. (Scott)
   # Security Function. (jerry)
-  # Open11s works on ath5k (Scott) (May)
+  # Open11s works on Hostapd (Scott) (May)
     # sending beacon (2008.4.16 finished)
     # Peer link management protocol.
     # On-demand HWMP + broadcast by controlled flooding.
