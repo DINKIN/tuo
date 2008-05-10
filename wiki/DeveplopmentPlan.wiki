@@ -36,6 +36,7 @@ mac80211中的802.11s实现是现在目前唯一能够找到的开源802.11s实�
     # Peer link management protocol.
     # On-demand HWMP + broadcast by controlled flooding.
     # Airtime link metric and per-peer rate adaptation
+    # Layer-2 Forwarding on Madwifi.
   # Multi-Radio.  (Scott) (June)
     # Routing table modify
     # HWMP
