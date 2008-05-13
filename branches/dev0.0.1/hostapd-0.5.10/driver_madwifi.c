@@ -1270,6 +1270,8 @@ handle_read(void *ctx, const u8 *src_addr, const u8 *buf, size_t len)
 //			   len - sizeof(struct l2_ethhdr));
 }
 
+#define ETH_P_80211_RAW 0x0019
+
 static int
 madwifi_init(struct hostapd_data *hapd)
 {
@@ -1299,8 +1301,6 @@ madwifi_init(struct hostapd_data *hapd)
 		goto bad;
 	}
 	drv->ifindex = ifr.ifr_ifindex;
-
-#define ETH_P_80211_RAW 0x0019
 
 	drv->sock_xmit = l2_packet_init(drv->iface, NULL, ETH_P_80211_RAW,
 					handle_read, drv, 1);
@@ -1419,6 +1419,15 @@ madwifi_commit(void *priv)
 	return madwifi_set_iface_flags(priv, 1);
 }
 
+static int madwifi_send_mgmt_frame(void *priv, const void *msg, size_t len,
+				  int flags)
+{
+	struct madwifi_driver_data *drv = priv;
+	
+	return l2_packet_send(drv->sock_xmit, NULL, ETH_P_80211_RAW, msg, len);
+}
+
+
 static const struct driver_ops madwifi_driver_ops = {
 	.name			= "madwifi",
 	.init			= madwifi_init,
@@ -1438,6 +1447,7 @@ static const struct driver_ops madwifi_driver_ops = {
 	.sta_deauth		= madwifi_sta_deauth,
 	.set_ssid		= madwifi_set_ssid,
 	.get_ssid		= madwifi_get_ssid,
+	.send_mgmt_frame	= madwifi_send_mgmt_frame,
 	.set_countermeasures	= madwifi_set_countermeasures,
 	.sta_clear_stats        = madwifi_sta_clear_stats,
 	.commit			= madwifi_commit,
