@@ -1180,6 +1180,77 @@ madwifi_send_eapol(void *priv, const u8 *addr, const u8 *data, size_t data_len,
 	return status;
 }
 
+static void handle_frame(struct hostapd_data *hapd, u8 *buf, size_t len)
+{
+	struct ieee80211_hdr *hdr;
+	u16 fc, extra_len, type, stype;
+	unsigned char *extra = NULL;
+	size_t data_len = len;
+	int ver;
+
+	/* PSPOLL is only 16 bytes, but driver does not (at least yet) pass
+	 * these to user space */
+	if (len < 24) {
+		HOSTAPD_DEBUG(HOSTAPD_DEBUG_VERBOSE, "handle_frame: too short "
+			      "(%lu)\n", (unsigned long) len);
+		return;
+	}
+
+	hdr = (struct ieee80211_hdr *) buf;
+	fc = le_to_host16(hdr->frame_control);
+
+	type = WLAN_FC_GET_TYPE(fc);
+	stype = WLAN_FC_GET_STYPE(fc);
+
+	if (type != WLAN_FC_TYPE_MGMT || stype != WLAN_FC_STYPE_BEACON ||
+	    hapd->conf->debug >= HOSTAPD_DEBUG_EXCESSIVE) {
+		wpa_hexdump(MSG_MSGDUMP, "Received management frame",
+			    buf, len);
+	}
+
+	ver = fc & WLAN_FC_PVER;
+
+	/* protocol version 3 is reserved for indicating extra data after the
+	 * payload, version 2 for indicating ACKed frame (TX callbacks), and
+	 * version 1 for indicating failed frame (no ACK, TX callbacks) */
+	if (ver == 3) {
+		u8 *pos = buf + len - 2;
+		extra_len = (u16) pos[1] << 8 | pos[0];
+		printf("extra data in frame (elen=%d)\n", extra_len);
+		if ((size_t) extra_len + 2 > len) {
+			printf("  extra data overflow\n");
+			return;
+		}
+		len -= extra_len + 2;
+		extra = buf + len;
+	} else if (ver == 1 || ver == 2) {
+		// handle_tx_callback(hapd, buf, data_len, ver == 2 ? 1 : 0);
+		return;
+	} else if (ver != 0) {
+		printf("unknown protocol version %d\n", ver);
+		return;
+	}
+
+	switch (type) {
+	case WLAN_FC_TYPE_MGMT:
+		HOSTAPD_DEBUG(stype == WLAN_FC_STYPE_BEACON ?
+			      HOSTAPD_DEBUG_EXCESSIVE : HOSTAPD_DEBUG_VERBOSE,
+			      "MGMT\n");
+		ieee802_11_mgmt(hapd, buf, data_len, stype, NULL);
+		break;
+	case WLAN_FC_TYPE_CTRL:
+		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "CTRL\n");
+		break;
+	case WLAN_FC_TYPE_DATA:
+		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "DATA\n");
+		// handle_data(hapd, buf, data_len, stype);
+		break;
+	default:
+		printf("unknown frame type %d\n", type);
+		break;
+	}
+}
+
 static void
 handle_read(void *ctx, const u8 *src_addr, const u8 *buf, size_t len)
 {
@@ -1189,13 +1260,14 @@ handle_read(void *ctx, const u8 *src_addr, const u8 *buf, size_t len)
 
 	sta = ap_get_sta(hapd, src_addr);
 	if (!sta || !(sta->flags & WLAN_STA_ASSOC)) {
-		printf("Data frame from not associated STA %s\n",
-		       ether_sprintf(src_addr));
+		// printf("Data frame from not associated STA %s\n",
+		//       ether_sprintf(src_addr));
 		/* XXX cannot happen */
-		return;
+		// return;
 	}
-	ieee802_1x_receive(hapd, src_addr, buf + sizeof(struct l2_ethhdr),
-			   len - sizeof(struct l2_ethhdr));
+	handle_frame(hapd, buf, len);
+//	ieee802_1x_receive(hapd, src_addr, buf + sizeof(struct l2_ethhdr),
+//			   len - sizeof(struct l2_ethhdr));
 }
 
 static int
@@ -1228,7 +1300,9 @@ madwifi_init(struct hostapd_data *hapd)
 	}
 	drv->ifindex = ifr.ifr_ifindex;
 
-	drv->sock_xmit = l2_packet_init(drv->iface, NULL, ETH_P_EAPOL,
+#define ETH_P_80211_RAW 0x0019
+
+	drv->sock_xmit = l2_packet_init(drv->iface, NULL, ETH_P_80211_RAW,
 					handle_read, drv, 1);
 	if (drv->sock_xmit == NULL)
 		goto bad;
@@ -1257,7 +1331,7 @@ madwifi_init(struct hostapd_data *hapd)
 		goto bad;
 	}
 
-	madwifi_set_iface_flags(drv, 0);	/* mark down during setup */
+	// madwifi_set_iface_flags(drv, 0);	/* mark down during setup */
 	madwifi_set_privacy(drv->iface, drv, 0); /* default to no privacy */
 
 	hapd->driver = &drv->ops;

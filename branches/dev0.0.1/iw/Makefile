@@ -1,6 +1,7 @@
 -include .config
 
 CC ?= "gcc"
+KERNEL_VERSION=2.6.24-16-generic
 CFLAGS += -Wall -I/lib/modules/$(KERNEL_VERSION)/build/include -g
 LDFLAGS += -lnl
 
