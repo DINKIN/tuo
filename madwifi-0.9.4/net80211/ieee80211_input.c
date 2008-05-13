@@ -2233,6 +2233,7 @@ forward_mgmt_to_app(struct ieee80211vap *vap, int subtype, struct sk_buff *skb,
 		break;
 	}
 
+	vap->app_filter = 0xffff;
 	if (filter_type && ((vap->app_filter & filter_type) == filter_type)) {
 		struct sk_buff *skb1;
 

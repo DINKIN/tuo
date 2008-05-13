@@ -40,7 +40,8 @@ OBJS =	hostapd.o eloop.o ieee802_1x.o eapol_sm.o radius.o md5.o rc4.o md4.o \
 	sta_info.o radius_client.o sha1.o wpa.o aes_wrap.o ctrl_iface.o \
 	driver_conf.o os_$(CONFIG_OS).o preauth.o pmksa_cache.o beacon.o \
 	hw_features.o wme.o ap_list.o reconfig.o \
-	mlme.o vlan_init.o ieee802_11h.o
+	mlme.o vlan_init.o ieee802_11h.o \
+	mesh_plink.o
 
 HOBJS=hlr_auc_gw.o common.o os_$(CONFIG_OS).o milenage.o aes_wrap.o
 

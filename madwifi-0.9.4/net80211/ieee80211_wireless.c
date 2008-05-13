@@ -753,7 +753,7 @@ ieee80211_ioctl_siwfreq(struct net_device *dev, struct iw_request_info *info,
 		 * "running" but not "up".  Otherwise, iv_des_chan will take
 		 * effect when we are transitioned to RUN state later. */
 		if (IS_UP(vap->iv_dev)) {
-			pre_announced_chanswitch(dev, ieee80211_chan2ieee(ic, vap->iv_des_chan), IEEE80211_DEFAULT_CHANCHANGE_TBTT_COUNT);
+			// pre_announced_chanswitch(dev, ieee80211_chan2ieee(ic, vap->iv_des_chan), IEEE80211_DEFAULT_CHANCHANGE_TBTT_COUNT);
 		}
 		else if (vap->iv_state == IEEE80211_S_RUN) {
 			ic->ic_curchan = vap->iv_des_chan;
