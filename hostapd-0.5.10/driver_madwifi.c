@@ -52,7 +52,7 @@
 #include "ieee802_11.h"
 #include "accounting.h"
 #include "common.h"
-
+#include "hw_features.h"
 
 struct madwifi_driver_data {
 	struct driver_ops ops;			/* base class */
@@ -1180,11 +1180,11 @@ madwifi_send_eapol(void *priv, const u8 *addr, const u8 *data, size_t data_len,
 	return status;
 }
 
-static void handle_frame(struct hostapd_data *hapd, u8 *buf, size_t len)
+static void handle_frame(struct hostapd_data *hapd, const u8 *buf, size_t len)
 {
 	struct ieee80211_hdr *hdr;
 	u16 fc, extra_len, type, stype;
-	unsigned char *extra = NULL;
+	const unsigned char *extra = NULL;
 	size_t data_len = len;
 	int ver;
 
@@ -1214,7 +1214,7 @@ static void handle_frame(struct hostapd_data *hapd, u8 *buf, size_t len)
 	 * payload, version 2 for indicating ACKed frame (TX callbacks), and
 	 * version 1 for indicating failed frame (no ACK, TX callbacks) */
 	if (ver == 3) {
-		u8 *pos = buf + len - 2;
+		const u8 *pos = buf + len - 2;
 		extra_len = (u16) pos[1] << 8 | pos[0];
 		printf("extra data in frame (elen=%d)\n", extra_len);
 		if ((size_t) extra_len + 2 > len) {
@@ -1256,7 +1256,9 @@ handle_read(void *ctx, const u8 *src_addr, const u8 *buf, size_t len)
 {
 	struct madwifi_driver_data *drv = ctx;
 	struct hostapd_data *hapd = drv->hapd;
+	struct hostapd_iface *iface = hapd->iface;
 	struct sta_info *sta;
+	size_t i;
 
 	sta = ap_get_sta(hapd, src_addr);
 	if (!sta || !(sta->flags & WLAN_STA_ASSOC)) {
@@ -1265,7 +1267,10 @@ handle_read(void *ctx, const u8 *src_addr, const u8 *buf, size_t len)
 		/* XXX cannot happen */
 		// return;
 	}
-	handle_frame(hapd, buf, len);
+
+	for(i = 0; i < iface->num_bss; i++) {
+		handle_frame(iface->bss[i], buf, len);
+	}
 //	ieee802_1x_receive(hapd, src_addr, buf + sizeof(struct l2_ethhdr),
 //			   len - sizeof(struct l2_ethhdr));
 }
@@ -1427,6 +1432,54 @@ static int madwifi_send_mgmt_frame(void *priv, const void *msg, size_t len,
 	return l2_packet_send(drv->sock_xmit, NULL, ETH_P_80211_RAW, msg, len);
 }
 
+static struct hostapd_hw_modes * madwifi_get_hw_feature_data(void *priv,
+							    u16 *num_modes,
+							    u16 *flags)
+{
+	struct hostapd_hw_modes *mode;
+	int i, clen, rlen;
+	const short chan2freq[14] = {
+		2412, 2417, 2422, 2427, 2432, 2437, 2442,
+		2447, 2452, 2457, 2462, 2467, 2472, 2484
+	};
+
+	mode = wpa_zalloc(sizeof(struct hostapd_hw_modes));
+	if (mode == NULL)
+		return NULL;
+
+	*num_modes = 1;
+	*flags = 0;
+
+	mode->mode = HOSTAPD_MODE_IEEE80211B;
+	mode->num_channels = 14;
+	mode->num_rates = 4;
+
+	clen = mode->num_channels * sizeof(struct hostapd_channel_data);
+	rlen = mode->num_rates * sizeof(struct hostapd_rate_data);
+
+	mode->channels = wpa_zalloc(clen);
+	mode->rates = wpa_zalloc(rlen);
+	if (mode->channels == NULL || mode->rates == NULL) {
+		hostapd_free_hw_features(mode, *num_modes);
+		return NULL;
+	}
+
+	for (i = 0; i < 14; i++) {
+		mode->channels[i].chan = i + 1;
+		mode->channels[i].freq = chan2freq[i];
+	}
+
+	mode->rates[0].rate = 10;
+	mode->rates[0].flags = HOSTAPD_RATE_CCK;
+	mode->rates[1].rate = 20;
+	mode->rates[1].flags = HOSTAPD_RATE_CCK;
+	mode->rates[2].rate = 55;
+	mode->rates[2].flags = HOSTAPD_RATE_CCK;
+	mode->rates[3].rate = 110;
+	mode->rates[3].flags = HOSTAPD_RATE_CCK;
+
+	return mode;
+}
 
 static const struct driver_ops madwifi_driver_ops = {
 	.name			= "madwifi",
@@ -1451,6 +1504,7 @@ static const struct driver_ops madwifi_driver_ops = {
 	.set_countermeasures	= madwifi_set_countermeasures,
 	.sta_clear_stats        = madwifi_sta_clear_stats,
 	.commit			= madwifi_commit,
+	.get_hw_feature_data 	= madwifi_get_hw_feature_data,
 };
 
 void madwifi_driver_register(void)
