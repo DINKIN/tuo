@@ -128,6 +128,18 @@ struct hostapd_wme_ac_params {
 	int admission_control_mandatory;
 };
 
+/**
+ * enum ieee80211_if_types - types of 802.11 network interfaces
+ *
+ * @IEEE80211_IF_TYPE_INVALID: invalid interface type
+ * @IEEE80211_IF_TYPE_AP: AP mode
+ * @IEEE80211_IF_TYPE_MP: Mesh Point mode
+ */
+enum ieee80211_if_types {
+	IEEE80211_IF_TYPE_INVALID = 0,
+	IEEE80211_IF_TYPE_AP,
+	IEEE80211_IF_TYPE_MP,
+};
 
 /**
  * struct hostapd_bss_config - Per-BSS configuration
@@ -135,6 +147,7 @@ struct hostapd_wme_ac_params {
 struct hostapd_bss_config {
 	char iface[IFNAMSIZ + 1];
 	char bridge[IFNAMSIZ + 1];
+	enum ieee80211_if_types type;
 
 	enum {
 		HOSTAPD_LEVEL_DEBUG_VERBOSE = 0,

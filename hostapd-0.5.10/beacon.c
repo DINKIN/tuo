@@ -219,7 +219,9 @@ void handle_probe_req(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
 
 	sta = ap_get_sta(hapd, mgmt->sa);
 
-	mesh_neighbour_update(mgmt->sa, 0);
+	if(hapd->conf->type == IEEE80211_IF_TYPE_MP) {
+		mesh_neighbour_update(mgmt->sa, 0);
+	}
 
 	if (elems.ssid_len == 0 ||
 	    (elems.ssid_len == hapd->conf->ssid.ssid_len &&
