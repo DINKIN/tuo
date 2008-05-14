@@ -3032,8 +3032,8 @@ ieee80211_recv_mgmt(struct ieee80211_node *ni, struct sk_buff *skb,
 					IEEE80211_FC0_SUBTYPE_SHIFT],
 				"%s", "recv'd rate set invalid");
 		} else {
-			IEEE80211_SEND_MGMT(ni,
-				IEEE80211_FC0_SUBTYPE_PROBE_RESP, 0);
+			// IEEE80211_SEND_MGMT(ni,
+			//	IEEE80211_FC0_SUBTYPE_PROBE_RESP, 0);
 		}
 		if (allocbs && vap->iv_opmode != IEEE80211_M_IBSS) {
 			/*
