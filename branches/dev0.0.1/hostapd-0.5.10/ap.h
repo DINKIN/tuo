@@ -15,6 +15,8 @@
 #ifndef AP_H
 #define AP_H
 
+#include <linux/types.h>
+
 /* STA flags */
 #define WLAN_STA_AUTH BIT(0)
 #define WLAN_STA_ASSOC BIT(1)
@@ -82,6 +84,19 @@ struct sta_info {
 	struct hostapd_ssid *ssid_probe; /* SSID selection based on ProbeReq */
 
 	int vlan_id;
+#ifdef CONFIG_MAC80211_MESH
+	/*
+	 * Mesh peer link attributes
+	 * TODO: move to a sub-structure that is referenced with pointer?
+	 */
+	__le16 llid;		/* Local link ID */
+	__le16 plid;		/* Peer link ID */
+	__le16 reason;		/* Cancel reason on PLINK_HOLDING state */
+	u8 plink_retries;	/* Retries in establishment */
+	u8 ignore_plink_timer;
+	u32 plink_state;
+	u32 plink_timeout;
+#endif
 };
 
 

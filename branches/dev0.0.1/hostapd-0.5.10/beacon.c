@@ -26,7 +26,7 @@
 #include "driver.h"
 #include "sta_info.h"
 #include "ieee802_11h.h"
-#include "mesh_plink.h"
+#include "mesh.h"
 
 static u8 ieee802_11_erp_info(struct hostapd_data *hapd)
 {
@@ -220,7 +220,7 @@ void handle_probe_req(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
 	sta = ap_get_sta(hapd, mgmt->sa);
 
 	if(hapd->conf->type == IEEE80211_IF_TYPE_MP) {
-		mesh_neighbour_update(mgmt->sa, 0);
+		mesh_neighbour_update(hapd, mgmt->sa, 0);
 	}
 
 	if (elems.ssid_len == 0 ||

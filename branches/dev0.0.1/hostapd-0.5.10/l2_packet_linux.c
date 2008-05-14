@@ -48,6 +48,9 @@ int l2_packet_send(struct l2_packet_data *l2, const u8 *dst_addr, u16 proto,
 	int ret;
 	if (l2 == NULL)
 		return -1;
+
+	wpa_hexdump(MSG_MSGDUMP, "Send management frame",
+		    buf, len);
 	if (l2->l2_hdr) {
 		ret = send(l2->fd, buf, len, 0);
 		if (ret < 0)

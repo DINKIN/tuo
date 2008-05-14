@@ -113,6 +113,7 @@ struct hostapd_data {
 	struct hostapd_iface *iface;
 	struct hostapd_config *iconf;
 	struct hostapd_bss_config *conf;
+	struct mesh_config *mconf;
 	int interface_added; /* virtual interface added for this BSS */
 
 	u8 own_addr[ETH_ALEN];
@@ -162,6 +163,25 @@ struct hostapd_data {
 	struct radius_server_data *radius_srv;
 
 	int parameter_set_count;
+
+#ifdef CONFIG_MAC80211_MESH
+	u8 mesh_id[HOSTAPD_MAX_MESH_ID_LEN];
+	size_t mesh_id_len;
+	/* Active Path Selection Protocol Identifier */
+	u8 mesh_pp_id[4];
+	/* Active Path Selection Metric Identifier */
+	u8 mesh_pm_id[4];
+	/* Congestion Control Mode Identifier */
+	u8 mesh_cc_id[4];
+	/* Local mesh Destination Sequence Number */
+	u32 dsn;
+	/* Last used PREQ ID */
+	u32 preq_id;
+	/* Timestamp of last DSN update */
+	unsigned long last_dsn_update;
+	/* Timestamp of last DSN sent */
+	unsigned long last_preq;
+#endif
 
 #ifdef CONFIG_FULL_DYNAMIC_VLAN
 	struct full_dynamic_vlan *full_dynamic_vlan;

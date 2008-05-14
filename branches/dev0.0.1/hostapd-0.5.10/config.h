@@ -22,6 +22,7 @@ typedef u8 macaddr[ETH_ALEN];
 struct hostapd_radius_servers;
 
 #define HOSTAPD_MAX_SSID_LEN 32
+#define HOSTAPD_MAX_MESH_ID_LEN 32
 
 #define NUM_WEP_KEYS 4
 struct hostapd_wep_keys {
@@ -289,12 +290,34 @@ typedef enum {
 	NUM_HOSTAPD_MODES
 } hostapd_hw_mode;
 
+/**
+ * struct mesh_config - mesh point interface configuration
+ */
+struct mesh_config {
+	/* Timeouts in ms */
+	/* Mesh plink management parameters */
+	u16 dot11MeshRetryTimeout;
+	u16 dot11MeshConfirmTimeout;
+	u16 dot11MeshHoldingTimeout;
+	u16 dot11MeshMaxPeerLinks;
+	u8  dot11MeshMaxRetries;
+	u8  dot11MeshTTL;
+	u8 auto_open_plinks;
+	/* HWMP parameters */
+	u8  dot11MeshHWMPmaxPREQretries;
+	u32 path_refresh_time;
+	u16 min_discovery_timeout;
+	u32 dot11MeshHWMPactivePathTimeout;
+	u16 dot11MeshHWMPpreqMinInterval;
+	u16 dot11MeshHWMPnetDiameterTraversalTime;
+};
 
 /**
  * struct hostapd_config - Per-radio interface configuration
  */
 struct hostapd_config {
 	struct hostapd_bss_config *bss, *last_bss;
+	struct mesh_config *mconf;
 	struct hostapd_radius_servers *radius;
 	size_t num_bss;
 

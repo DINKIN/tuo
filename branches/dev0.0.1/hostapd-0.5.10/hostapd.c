@@ -1626,6 +1626,7 @@ hostapd_alloc_bss_data(struct hostapd_iface *hapd_iface,
 
 	hapd->iconf = conf;
 	hapd->conf = bss;
+	hapd->mconf = conf->mconf;
 	hapd->iface = hapd_iface;
 
 	if (hapd->conf->individual_wep_key_len > 0) {
