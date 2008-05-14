@@ -225,8 +225,10 @@ ieee80211_hardstart(struct sk_buff *skb, struct net_device *dev)
 
 	cb = (struct ieee80211_cb *) skb->cb;
 	memset(cb, 0, sizeof(struct ieee80211_cb));
+
+#define ETH_P_80211_RAW 0x0019 
 	
-        if (vap->iv_opmode == IEEE80211_M_MONITOR) {
+        if (vap->iv_opmode == IEEE80211_M_MONITOR || skb->protocol == htons(ETH_P_80211_RAW)) {
 		ieee80211_monitor_encap(vap, skb);
                 ieee80211_parent_queue_xmit(skb);
                 return 0;
