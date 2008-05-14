@@ -1236,6 +1236,8 @@ struct hostapd_config * hostapd_config_read(const char *fname)
 				bss->ssid.ssid[bss->ssid.ssid_len] = '\0';
 				bss->ssid.ssid_set = 1;
 			}
+		} else if (strcmp(buf, "interface_type") == 0) {
+			bss->type = atoi(pos);
 		} else if (strcmp(buf, "macaddr_acl") == 0) {
 			bss->macaddr_acl = atoi(pos);
 			if (bss->macaddr_acl != ACCEPT_UNLESS_DENIED &&
