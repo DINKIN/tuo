@@ -144,6 +144,13 @@ static int hostapd_config_read_int10(const char *value)
 	return i * 10 + d;
 }
 
+static void hostapd_config_defaults_mesh(struct mesh_config *mconf)
+{
+	memset(mconf, 0, sizeof(*mconf));
+
+	mconf->dot11MeshRetryTimeout = 1;
+	mconf->dot11MeshMaxRetries = 3;
+}
 
 static void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)
 {
@@ -180,6 +187,7 @@ static struct hostapd_config * hostapd_config_defaults(void)
 {
 	struct hostapd_config *conf;
 	struct hostapd_bss_config *bss;
+	struct mesh_config *mconf;
 	int i;
 	const int aCWmin = 15, aCWmax = 1024;
 	const struct hostapd_wme_ac_params ac_bk =
@@ -193,6 +201,7 @@ static struct hostapd_config * hostapd_config_defaults(void)
 
 	conf = wpa_zalloc(sizeof(*conf));
 	bss = wpa_zalloc(sizeof(*bss));
+	mconf = wpa_zalloc(sizeof(*mconf));
 	if (conf == NULL || bss == NULL) {
 		printf("Failed to allocate memory for configuration data.\n");
 		free(conf);
@@ -216,10 +225,12 @@ static struct hostapd_config * hostapd_config_defaults(void)
 		return NULL;
 	}
 
+	hostapd_config_defaults_mesh(mconf);
 	hostapd_config_defaults_bss(bss);
 
 	conf->num_bss = 1;
 	conf->bss = bss;
+	conf->mconf = mconf;
 
 	conf->beacon_int = 100;
 	conf->rts_threshold = -1; /* use driver default: 2347 */

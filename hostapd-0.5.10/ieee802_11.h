@@ -154,6 +154,13 @@
 #define WLAN_EID_IBSS_PARAMS 6
 #define WLAN_EID_COUNTRY 7
 #define WLAN_EID_CHALLENGE 16
+/* 802.11s */
+#define	WLAN_EID_MESH_CONFIG 36      	/* Pending IEEE 802.11 ANA approval */
+#define	WLAN_EID_MESH_ID 37       	/* Pending IEEE 802.11 ANA approval */
+#define	WLAN_EID_PEER_LINK 40		/* Pending IEEE 802.11 ANA approval */
+#define	WLAN_EID_PREQ 53		/* Pending IEEE 802.11 ANA approval */
+#define	WLAN_EID_PREP 54		/* Pending IEEE 802.11 ANA approval */
+#define	WLAN_EID_PERR 55		/* Pending IEEE 802.11 ANA approval */
 /* EIDs defined by IEEE 802.11h - START */
 #define WLAN_EID_PWR_CONSTRAINT 32
 #define WLAN_EID_PWR_CAPABILITY 33
@@ -251,6 +258,23 @@ struct ieee80211_mgmt {
 					u8 new_chan;
 					u8 switch_count;
 				} __attribute__ ((packed)) chan_switch;
+				struct{
+					u8 action_code;
+					/* capab_info for open and confirm,
+					 * reason for close
+					 */
+					u16 aux;
+					/* Followed in plink_confirm by status
+					 * code, AID and supported rates,
+					 * and directly by supported rates in
+					 * plink_open and plink_close
+					 */
+					u8 variable[0];
+				} __attribute__((packed)) plink_action;
+				struct{
+					u8 action_code;
+					u8 variable[0];
+				} __attribute__((packed)) mesh_action;
 			} u;
 		} __attribute__ ((packed)) action;
 	} u;
