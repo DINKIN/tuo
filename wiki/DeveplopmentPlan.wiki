@@ -26,6 +26,12 @@ mac80211中的802.11s实现是现在目前唯一能够找到的开源802.11s实�
 
 第一步需要考察一下阿德利亚使用的是哪个方案，还有就是目前的Mesh产品使用的是什么方案。
 
+= XXX-to-802.11 bridge =
+Next Step
+
+3G-to-802.11
+Zigbee-to-802.11
+WiMax-to-802.11
 
 = 开发计划 =
   # Build development environment. (Finish)
