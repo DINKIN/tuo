@@ -27,7 +27,7 @@ Deauthentication will definitely cause deassociation, and can be done by either 
 4-Way handshake and Group Key Handshake.
 
 = Data Origin Authenticity =
+CCMP or TKIP can handle this.
 
-
-
-
+= Replay Detection =
+STA can detect an unauthorized retransmission by CCMP or TKIP.
