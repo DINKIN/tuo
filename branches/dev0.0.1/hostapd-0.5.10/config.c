@@ -150,6 +150,9 @@ static void hostapd_config_defaults_mesh(struct mesh_config *mconf)
 
 	mconf->dot11MeshRetryTimeout = 1;
 	mconf->dot11MeshMaxRetries = 3;
+	mconf->min_discovery_timeout = 1;
+	mconf->dot11MeshHWMPactivePathTimeout = 1;
+	mconf->dot11MeshTTL = 255;
 }
 
 static void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)

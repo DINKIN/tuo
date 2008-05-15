@@ -16,6 +16,7 @@
 #define CONFIG_H
 
 #include "config_types.h"
+#include "list.h"
 
 typedef u8 macaddr[ETH_ALEN];
 
@@ -289,6 +290,21 @@ typedef enum {
 	HOSTAPD_MODE_IEEE80211A,
 	NUM_HOSTAPD_MODES
 } hostapd_hw_mode;
+
+struct mesh_stats {
+	__u32 fwded_frames;		/* Mesh forwarded frames */
+	__u32 dropped_frames_ttl;	/* Not transmitted since mesh_ttl == 0*/
+	__u32 dropped_frames_no_route;	/* Not transmitted, no route found */
+	u8 estab_plinks;
+};
+
+#define PREQ_Q_F_START		0x1
+#define PREQ_Q_F_REFRESH	0x2
+struct mesh_preq_queue {
+	struct list_head list;
+	u8 dst[ETH_ALEN];
+	u8 flags;
+};
 
 /**
  * struct mesh_config - mesh point interface configuration

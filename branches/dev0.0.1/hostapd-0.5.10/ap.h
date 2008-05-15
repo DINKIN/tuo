@@ -96,6 +96,9 @@ struct sta_info {
 	u8 ignore_plink_timer;
 	u32 plink_state;
 	u32 plink_timeout;
+	
+	u32 fail_avg;
+	int txrate_idx;
 #endif
 };
 

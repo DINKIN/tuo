@@ -10,7 +10,7 @@ endif
 CFLAGS += -DHOSTAPD_DUMP_STATE
 
 # Include directories for CVS version
-CFLAGS += -I. -I../utils -I$(DIR_WPA_SUPPLICANT)
+CFLAGS += -I. -I../utils -I$(DIR_WPA_SUPPLICANT) 
 
 # Uncomment following line and set the path to your kernel tree include
 # directory if your C library does not include all header files.
@@ -43,7 +43,7 @@ OBJS =	hostapd.o eloop.o ieee802_1x.o eapol_sm.o radius.o md5.o rc4.o md4.o \
 	driver_conf.o os_$(CONFIG_OS).o preauth.o pmksa_cache.o beacon.o \
 	hw_features.o wme.o ap_list.o reconfig.o \
 	mlme.o vlan_init.o ieee802_11h.o \
-	mesh_plink.o mesh.o
+	mesh_pathtbl.o mesh_hwmp.o mesh_plink.o mesh.o
 
 HOBJS=hlr_auc_gw.o common.o os_$(CONFIG_OS).o milenage.o aes_wrap.o
 

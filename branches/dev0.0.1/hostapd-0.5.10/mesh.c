@@ -12,8 +12,8 @@ void mesh_mgmt_ies_add(u8 *pos, struct hostapd_data *hapd)
 {
 //	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
 //	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-	struct ieee80211_supported_band *sband;
-	int len, i, rate;
+//	struct ieee80211_supported_band *sband;
+//	int len, i, rate;
 
 //	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
 //	len = sband->n_bitrates;
