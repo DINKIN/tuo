@@ -76,3 +76,5 @@ http://www.cyberciti.biz/tips/connect-soekris-single-board-computer-using-minico
 Serial Device : /dev/ttyS0
 Bps/Par/Bits : 38400 8N1
 using a nullmodem (crossover) serial cable
+
+Most ALIX boards from PC Engines have serial console interfaces. However boards with video interfaces like the ALIX.3c3 and the mini-itx size ALIX board do not run tinyBIOS and do not have serial console interfaces. These boards are running a version of Award BIOS and the user is expected to use the video interface itself with a USB keyboard to access the console. 
