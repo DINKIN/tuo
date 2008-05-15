@@ -113,9 +113,9 @@ struct hostapd_data {
 	struct hostapd_iface *iface;
 	struct hostapd_config *iconf;
 	struct hostapd_bss_config *conf;
-	struct mesh_config *mconf;
 	int interface_added; /* virtual interface added for this BSS */
 
+	u8 broadcast[ETH_ALEN];
 	u8 own_addr[ETH_ALEN];
 
 	int num_sta; /* number of entries in sta_list */
@@ -181,6 +181,12 @@ struct hostapd_data {
 	unsigned long last_dsn_update;
 	/* Timestamp of last DSN sent */
 	unsigned long last_preq;
+	struct mesh_preq_queue preq_queue;
+	int preq_queue_len;
+	struct mesh_stats mshstats;
+	struct mesh_config *mconf;
+	u8 mesh_seqnum[3];
+	u8 accepting_plinks;
 #endif
 
 #ifdef CONFIG_FULL_DYNAMIC_VLAN
