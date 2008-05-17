@@ -42,6 +42,7 @@
 #include "eap_sim_db.h"
 #include "eap.h"
 #include "version.h"
+#include "mesh.h"
 
 
 struct hapd_interfaces {
@@ -1026,6 +1027,8 @@ static int hostapd_setup_bss(struct hostapd_data *hapd, int first)
 	u8 ssid[HOSTAPD_MAX_SSID_LEN + 1];
 	int ssid_len, set_ssid;
 
+	memset(hapd->broadcast, 0xff, ETH_ALEN);
+
 	if (!first) {
 		if (hostapd_mac_comp_empty(hapd->conf->bssid) == 0) {
 			/* Allocate the next available BSSID. */
@@ -1195,6 +1198,7 @@ static int hostapd_setup_bss(struct hostapd_data *hapd, int first)
 	}
 
 	ieee802_11_set_beacon(hapd);
+	ieee802_11_set_probe_req(hapd);
 
 	if (vlan_init(hapd)) {
 		printf("VLAN initialization failed.\n");
@@ -1369,8 +1373,14 @@ static int setup_interface1(struct hostapd_iface *iface)
 		hapd->driver = NULL;
 		return -1;
 	}
-	for (i = 0; i < iface->num_bss; i++)
+	for (i = 0; i < iface->num_bss; i++) {
 		iface->bss[i]->driver = hapd->driver;
+		printf("%s: %d\n", __func__, iface->bss[i]->conf->type);
+		if(iface->bss[i]->conf->type == IEEE80211_IF_TYPE_MP) {
+			eloop_register_timeout(1, 0, hostapd_beacon_send, iface->bss[i], NULL);
+			eloop_register_timeout(2, 0, hwmp_proactive_preq, iface->bss[i], NULL);
+		}
+	}
 
 	if (hostapd_validate_bssid_configuration(iface))
 		return -1;

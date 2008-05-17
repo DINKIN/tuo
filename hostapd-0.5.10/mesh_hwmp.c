@@ -9,6 +9,7 @@
 #include "ieee802_11.h"
 #include "driver.h"
 #include "wireless_copy.h"
+#include "eloop.h"
 
 #define TEST_FRAME_LEN	8192
 #define MAX_METRIC	0xffffffff
@@ -82,15 +83,19 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
 	if (!mgmt)
 		return -1;
 	/* 25 is the size of the common mgmt part (24) plus the size of the
-	 * common action part (1)
+	 * common action part (1) category
 	 */
-	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.mesh_action));
+	memset(mgmt, 0, IEEE80211_HDRLEN + 1 + sizeof(mgmt->u.action.u.mesh_action));
 	mgmt->frame_control = IEEE80211_FC(WLAN_FC_TYPE_MGMT,
 					   WLAN_FC_STYPE_ACTION);
 
 	memcpy(mgmt->da, da, ETH_ALEN);
 	memcpy(mgmt->sa, hapd->own_addr, ETH_ALEN);
-	/* BSSID is left zeroed, wildcard value */
+	/* BSSID is left zeroed, wildcard value 
+	 * BSSID set to broadcast, because the madwifi driver only receive the broadcast bssid frame or matched bssid frame.
+	 */
+	memset(mgmt->bssid, 0xff, ETH_ALEN);
+
 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
 	mgmt->u.action.u.mesh_action.action_code = action;
 
@@ -133,6 +138,7 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
 	memcpy(pos, dst, ETH_ALEN);
 	pos += ETH_ALEN;
 	memcpy(pos, &dst_dsn, 4);
+	pos += 4;
 
 	if (hostapd_send_mgmt_frame(hapd, mgmt, pos - (u8 *) mgmt, 0) < 0)
 		perror("mesh_plink_frame_tx: send");
@@ -182,6 +188,7 @@ int mesh_path_error_tx(u8 *dst, __le32 dst_dsn, u8 *ra,
 	memcpy(pos, dst, ETH_ALEN);
 	pos += ETH_ALEN;
 	memcpy(pos, &dst_dsn, 4);
+	pos += 4;
 
 	if (hostapd_send_mgmt_frame(hapd, mgmt, pos - (u8 *) mgmt, 0) < 0)
 		perror("mesh_plink_frame_tx: send");
@@ -633,6 +640,20 @@ static void mesh_queue_preq(struct hostapd_data *hapd, struct mesh_path *mpath, 
 
 						min_preq_int_jiff(sdata));
 */
+}
+
+void hwmp_proactive_preq(void *eloop_ctx, void *timeout_ctx)
+{
+	struct hostapd_data *hapd = eloop_ctx;
+	eloop_register_timeout(2, 0, hwmp_proactive_preq, hapd, NULL);
+
+	printf("%s:\n", __func__);
+
+	mesh_path_sel_frame_tx(MPATH_PREQ, MP_F_RF, hapd->own_addr,
+			hapd->dsn, MP_F_RF, hapd->broadcast,
+			0, hapd->broadcast, 0,
+			hapd->mconf->dot11MeshTTL, 0, 0,
+			hapd->preq_id++, hapd);
 }
 
 /**

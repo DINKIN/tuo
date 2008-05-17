@@ -16,8 +16,12 @@
 #ifndef BEACON_H
 #define BEACON_H
 
+void hostapd_beacon_send(void *eloop_ctx, void *timeout_ctx);
+void handle_probe_resp(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
+		      size_t len);
 void handle_probe_req(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
 		      size_t len);
+void ieee802_11_set_probe_req(struct hostapd_data *hapd);
 void ieee802_11_set_beacon(struct hostapd_data *hapd);
 void ieee802_11_set_beacons(struct hostapd_iface *iface);
 

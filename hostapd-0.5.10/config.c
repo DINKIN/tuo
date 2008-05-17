@@ -1904,6 +1904,7 @@ void hostapd_config_free(struct hostapd_config *conf)
 	for (i = 0; i < conf->num_bss; i++)
 		hostapd_config_free_bss(&conf->bss[i]);
 	free(conf->bss);
+	free(conf->mconf);
 
 	free(conf);
 }
