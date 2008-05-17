@@ -3455,6 +3455,8 @@ ath_calcrxfilter(struct ath_softc *sc)
 		rfilt |= HAL_RX_FILTER_PROBEREQ;
 	if (ic->ic_opmode != IEEE80211_M_HOSTAP && (dev->flags & IFF_PROMISC))
 		rfilt |= HAL_RX_FILTER_PROM;
+	if (ic->ic_opmode == IEEE80211_M_HOSTAP)
+		rfilt |= HAL_RX_FILTER_PROM | HAL_RX_FILTER_PROBEREQ;
 	if (ic->ic_opmode == IEEE80211_M_STA ||
 	    sc->sc_opmode == HAL_M_IBSS ||	/* NB: AHDEMO too */
 	    (sc->sc_nostabeacons) || sc->sc_scanning)
@@ -5816,10 +5818,11 @@ rx_accept:
 				    sc->sc_keyixmap[keyix] == NULL)
 					sc->sc_keyixmap[keyix] = ieee80211_ref_node(ni);
 				ieee80211_free_node(ni); 
-			} else
+			} else {
 				type = ieee80211_input_all(ic, skb,
 					ds->ds_rxstat.rs_rssi,
 					ds->ds_rxstat.rs_tstamp);
+			}
 		}
 
 		if (sc->sc_diversity) {
