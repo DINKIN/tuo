@@ -2229,6 +2229,9 @@ forward_mgmt_to_app(struct ieee80211vap *vap, int subtype, struct sk_buff *skb,
 	case IEEE80211_FC0_SUBTYPE_DISASSOC:
 		filter_type = IEEE80211_FILTER_TYPE_DISASSOC;
 		break;
+	case IEEE80211_FC0_SUBTYPE_ACTION:
+		filter_type = IEEE80211_FILTER_TYPE_ACTION;
+		break;
 	default:
 		break;
 	}
