@@ -480,6 +480,9 @@ hostapd_set_beacon(const char *ifname, struct hostapd_data *hapd,
 		   u8 *head, size_t head_len,
 		   u8 *tail, size_t tail_len)
 {
+	memcpy(hapd->beacon, head, head_len);
+	memcpy(hapd->beacon + head_len, tail, tail_len);
+	hapd->beacon_len = head_len + tail_len;
 	if (hapd->driver == NULL || hapd->driver->set_beacon == NULL)
 		return 0;
 	return hapd->driver->set_beacon(ifname, hapd->driver, head, head_len,

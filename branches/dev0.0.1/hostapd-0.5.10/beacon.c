@@ -27,6 +27,7 @@
 #include "sta_info.h"
 #include "ieee802_11h.h"
 #include "mesh.h"
+#include "eloop.h"
 
 static u8 ieee802_11_erp_info(struct hostapd_data *hapd)
 {
@@ -176,6 +177,13 @@ static u8 * hostapd_eid_wpa(struct hostapd_data *hapd, u8 *eid, size_t len,
 	return eid + ielen;
 }
 
+void handle_probe_resp(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
+		      size_t len)
+{
+	if(hapd->conf->type == IEEE80211_IF_TYPE_MP) {
+		mesh_neighbour_update(hapd, mgmt->sa, 0);
+	}
+}
 
 void handle_probe_req(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
 		      size_t len)
@@ -219,10 +227,6 @@ void handle_probe_req(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
 
 	sta = ap_get_sta(hapd, mgmt->sa);
 
-	if(hapd->conf->type == IEEE80211_IF_TYPE_MP) {
-		mesh_neighbour_update(hapd, mgmt->sa, 0);
-	}
-
 	if (elems.ssid_len == 0 ||
 	    (elems.ssid_len == hapd->conf->ssid.ssid_len &&
 	     memcmp(elems.ssid, hapd->conf->ssid.ssid, elems.ssid_len) == 0)) {
@@ -255,7 +259,11 @@ void handle_probe_req(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
 	memcpy(resp->da, mgmt->sa, ETH_ALEN);
 	memcpy(resp->sa, hapd->own_addr, ETH_ALEN);
 
-	memcpy(resp->bssid, hapd->own_addr, ETH_ALEN);
+	if(hapd->conf->type == IEEE80211_IF_TYPE_MP) {
+		memset(resp->bssid, 0xff, ETH_ALEN);
+	} else {
+		memcpy(resp->bssid, hapd->own_addr, ETH_ALEN);
+	}
 	resp->u.probe_resp.beacon_int =
 		host_to_le16(hapd->iconf->beacon_int);
 
@@ -303,6 +311,57 @@ void handle_probe_req(struct hostapd_data *hapd, struct ieee80211_mgmt *mgmt,
 		      "our");
 }
 
+void hostapd_beacon_send(void *eloop_ctx, void *timeout_ctx)
+{
+	struct hostapd_data *hapd = eloop_ctx;
+	eloop_register_timeout(1, 0, hostapd_beacon_send, hapd, NULL);
+
+//	if (hostapd_send_mgmt_frame(hapd, hapd->beacon, hapd->beacon_len, 0) < 0)
+//		perror("beacon send");
+	if (hostapd_send_mgmt_frame(hapd, hapd->probe_req, hapd->probe_req_len, 0) < 0)
+		perror("beacon send");
+}
+
+void ieee802_11_set_probe_req(struct hostapd_data *hapd)
+{
+	struct ieee80211_mgmt *head;
+	u8 *pos;
+
+	head = (struct ieee80211_mgmt*)hapd->probe_req;
+
+	head->frame_control = IEEE80211_FC(WLAN_FC_TYPE_MGMT,
+					   WLAN_FC_STYPE_PROBE_REQ);
+	head->duration = host_to_le16(0);
+	memset(head->da, 0xff, ETH_ALEN);
+
+	memcpy(head->sa, hapd->own_addr, ETH_ALEN);
+	memset(head->bssid, 0xff, ETH_ALEN);
+
+	pos = hapd->probe_req + IEEE80211_HDRLEN;
+
+	/* SSID */
+	*pos++ = WLAN_EID_SSID;
+	if (hapd->conf->ignore_broadcast_ssid == 2) {
+		/* clear the data, but keep the correct length of the SSID */
+		*pos++ = hapd->conf->ssid.ssid_len;
+		memset(pos, 0, hapd->conf->ssid.ssid_len);
+		pos += hapd->conf->ssid.ssid_len;
+	} else if (hapd->conf->ignore_broadcast_ssid) {
+		*pos++ = 0; /* empty SSID */
+	} else {
+		*pos++ = hapd->conf->ssid.ssid_len;
+		memcpy(pos, hapd->conf->ssid.ssid, hapd->conf->ssid.ssid_len);
+		pos += hapd->conf->ssid.ssid_len;
+	}
+
+	/* Supported rates */
+	pos = hostapd_eid_supp_rates(hapd, pos);
+
+	/* Extended supported rates */
+	pos = hostapd_eid_ext_supp_rates(hapd, pos);
+
+	hapd->probe_req_len = pos - hapd->probe_req;
+}
 
 void ieee802_11_set_beacon(struct hostapd_data *hapd)
 {
@@ -416,8 +475,9 @@ void ieee802_11_set_beacon(struct hostapd_data *hapd)
 void ieee802_11_set_beacons(struct hostapd_iface *iface)
 {
 	size_t i;
-	for (i = 0; i < iface->num_bss; i++)
+	for (i = 0; i < iface->num_bss; i++) {
 		ieee802_11_set_beacon(iface->bss[i]);
+	}
 }
 
 #endif /* CONFIG_NATIVE_WINDOWS */

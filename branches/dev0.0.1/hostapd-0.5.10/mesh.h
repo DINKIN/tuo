@@ -118,7 +118,10 @@ static inline void mesh_path_activate(struct mesh_path *mpath)
 int mesh_plink_open(struct hostapd_data *hapd, struct sta_info *sta);
 void mesh_neighbour_update(struct hostapd_data *hapd, u8 *hw_addr, u64 rates);
 
+/* HWMP */
+void hwmp_proactive_preq(void *eloop_ctx, void *timeout_ctx);
 
+/* */
 void mesh_mgmt_ies_add(u8 *pos, struct hostapd_data *hapd);
 
 /**

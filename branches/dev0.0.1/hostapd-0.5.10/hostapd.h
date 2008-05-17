@@ -49,6 +49,8 @@
 
 #define MAX_VLAN_ID 4094
 
+#define MAX_MGMT_LEN	400
+
 struct ieee8023_hdr {
 	u8 dest[6];
 	u8 src[6];
@@ -187,6 +189,11 @@ struct hostapd_data {
 	struct mesh_config *mconf;
 	u8 mesh_seqnum[3];
 	u8 accepting_plinks;
+
+	u8 beacon[MAX_MGMT_LEN];
+	u32 beacon_len;
+	u8 probe_req[MAX_MGMT_LEN];
+	u32 probe_req_len;
 #endif
 
 #ifdef CONFIG_FULL_DYNAMIC_VLAN

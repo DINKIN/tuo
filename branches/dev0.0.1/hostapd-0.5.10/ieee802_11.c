@@ -37,6 +37,7 @@
 #include "driver.h"
 #include "ieee802_11h.h"
 #include "mlme.h"
+#include "mesh.h"
 
 
 u8 * hostapd_eid_supp_rates(struct hostapd_data *hapd, u8 *eid)
@@ -1261,29 +1262,36 @@ static void handle_action(struct hostapd_data *hapd,
 	switch (mgmt->u.action.category) {
 	case WME_ACTION_CATEGORY:
 		hostapd_wme_action(hapd, mgmt, len);
-		return;
+		break;
+	case MESH_PATH_SEL_CATEGORY:
+		if(hapd->conf->type == IEEE80211_IF_TYPE_MP) {
+			mesh_rx_path_sel_frame(hapd, mgmt, len);
+		}
+		break;
+	default:
+		hostapd_logger(hapd, mgmt->sa, HOSTAPD_MODULE_IEEE80211,
+			       HOSTAPD_LEVEL_DEBUG,
+			       "handle_action - unknown action category %d",
+			       mgmt->u.action.category);
+		if (!(mgmt->da[0] & 0x01) && !(mgmt->u.action.category & 0x80) &&
+		    !(mgmt->sa[0] & 0x01)) {
+			/*
+			 * IEEE 802.11-REVma/D9.0 - 7.3.1.11
+			 * Return the Action frame to the source without change
+			 * except that MSB of the Category set to 1.
+			 */
+			wpa_printf(MSG_DEBUG, "IEEE 802.11: Return unknown Action "
+				   "frame back to sender");
+			os_memcpy(mgmt->da, mgmt->sa, ETH_ALEN);
+			os_memcpy(mgmt->sa, hapd->own_addr, ETH_ALEN);
+			os_memcpy(mgmt->bssid, hapd->own_addr, ETH_ALEN);
+			mgmt->u.action.category |= 0x80;
+
+			hostapd_send_mgmt_frame(hapd, mgmt, len, 0);
+		}
+		break;
 	}
 
-	hostapd_logger(hapd, mgmt->sa, HOSTAPD_MODULE_IEEE80211,
-		       HOSTAPD_LEVEL_DEBUG,
-		       "handle_action - unknown action category %d",
-		       mgmt->u.action.category);
-	if (!(mgmt->da[0] & 0x01) && !(mgmt->u.action.category & 0x80) &&
-	    !(mgmt->sa[0] & 0x01)) {
-		/*
-		 * IEEE 802.11-REVma/D9.0 - 7.3.1.11
-		 * Return the Action frame to the source without change
-		 * except that MSB of the Category set to 1.
-		 */
-		wpa_printf(MSG_DEBUG, "IEEE 802.11: Return unknown Action "
-			   "frame back to sender");
-		os_memcpy(mgmt->da, mgmt->sa, ETH_ALEN);
-		os_memcpy(mgmt->sa, hapd->own_addr, ETH_ALEN);
-		os_memcpy(mgmt->bssid, hapd->own_addr, ETH_ALEN);
-		mgmt->u.action.category |= 0x80;
-
-		hostapd_send_mgmt_frame(hapd, mgmt, len, 0);
-	}
 }
 
 
@@ -1337,8 +1345,8 @@ void ieee802_11_mgmt(struct hostapd_data *hapd, u8 *buf, size_t len, u16 stype,
 	if (memcmp(mgmt->da, hapd->own_addr, ETH_ALEN) != 0) {
 		hostapd_logger(hapd, mgmt->sa, HOSTAPD_MODULE_IEEE80211,
 			       HOSTAPD_LEVEL_DEBUG,
-			       "MGMT: DA=" MACSTR " not our address",
-			       MAC2STR(mgmt->da));
+			       "MGMT: DA=" MACSTR " not our address=" MACSTR ,
+			       MAC2STR(mgmt->da), MAC2STR(hapd->own_addr));
 		return;
 	}
 
@@ -1370,6 +1378,10 @@ void ieee802_11_mgmt(struct hostapd_data *hapd, u8 *buf, size_t len, u16 stype,
 	case WLAN_FC_STYPE_ACTION:
 		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "mgmt::action\n");
 		handle_action(hapd, mgmt, len);
+		break;
+	case WLAN_FC_STYPE_PROBE_RESP:
+		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "mgmt::probe_resp\n");
+		handle_probe_resp(hapd, mgmt, len);
 		break;
 	default:
 		hostapd_logger(hapd, mgmt->sa, HOSTAPD_MODULE_IEEE80211,

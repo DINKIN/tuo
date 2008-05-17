@@ -53,6 +53,7 @@
 #include "accounting.h"
 #include "common.h"
 #include "hw_features.h"
+#include "beacon.h"
 
 struct madwifi_driver_data {
 	struct driver_ops ops;			/* base class */
