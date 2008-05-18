@@ -8,6 +8,20 @@
 
 #define ACCEPT_PLINKS 0x80
 
+int mesh_allocated = 0;
+
+void ieee80211s_init(void)
+{
+	mesh_pathtbl_init();
+	mesh_allocated = 1;
+}
+
+void ieee80211s_stop(void)
+{
+	mesh_allocated = 0;
+	mesh_pathtbl_unregister();
+}
+
 void mesh_mgmt_ies_add(u8 *pos, struct hostapd_data *hapd)
 {
 //	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
@@ -74,4 +88,44 @@ void mesh_mgmt_ies_add(u8 *pos, struct hostapd_data *hapd)
 
 	return;
 }
+
+struct mesh_table *mesh_table_alloc(int size)
+{
+	struct mesh_table *newtbl;
+
+	newtbl = wpa_zalloc(sizeof(struct mesh_table));
+	if (!newtbl)
+		return NULL;
+
+	newtbl->hash_buckets = wpa_zalloc(sizeof(struct hlist_head) * size);
+
+	if (!newtbl->hash_buckets) {
+		free(newtbl);
+		return NULL;
+	}
+
+	newtbl->size = size;
+	newtbl->entries = 0;
+	newtbl->hash_rnd = rand();
+
+	return newtbl;
+}
+
+void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
+{
+	struct hlist_head *mesh_hash;
+	struct hlist_node *p, *q;
+	int i;
+
+	mesh_hash = tbl->hash_buckets;
+	for (i = 0; i <= tbl->size; i++) {
+		hlist_for_each_safe(p, q, &mesh_hash[i]) {
+			tbl->free_node(p, free_leafs);
+			tbl->entries--;
+		}
+	}
+	free(tbl->hash_buckets);
+	free(tbl);
+}
+
 

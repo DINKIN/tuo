@@ -318,9 +318,33 @@ ParseRes ieee802_11_parse_elems(struct hostapd_data *hapd, u8 *start,
 			elems->power_cap = pos;
 			elems->power_cap_len = elen;
 			break;
-		case WLAN_EID_SUPPORTED_CHANNELS:
+/*		case WLAN_EID_SUPPORTED_CHANNELS:
 			elems->supp_channels = pos;
 			elems->supp_channels_len = elen;
+			break;
+*/		case WLAN_EID_MESH_ID:
+			elems->mesh_id = pos;
+			elems->mesh_id_len = elen;
+			break;
+		case WLAN_EID_MESH_CONFIG:
+			elems->mesh_config = pos;
+			elems->mesh_config_len = elen;
+			break;
+		case WLAN_EID_PEER_LINK:
+			elems->peer_link = pos;
+			elems->peer_link_len = elen;
+			break;
+		case WLAN_EID_PREQ:
+			elems->preq = pos;
+			elems->preq_len = elen;
+			break;
+		case WLAN_EID_PREP:
+			elems->prep = pos;
+			elems->prep_len = elen;
+			break;
+		case WLAN_EID_PERR:
+			elems->perr = pos;
+			elems->perr_len = elen;
 			break;
 		default:
 			unknown++;
@@ -1341,6 +1365,11 @@ void ieee802_11_mgmt(struct hostapd_data *hapd, u8 *buf, size_t len, u16 stype,
 		handle_probe_req(hapd, mgmt, len);
 		return;
 	}
+	if (stype == WLAN_FC_STYPE_ACTION) {
+		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "mgmt::action\n");
+		handle_action(hapd, mgmt, len);
+		return;
+	}
 
 	if (memcmp(mgmt->da, hapd->own_addr, ETH_ALEN) != 0) {
 		hostapd_logger(hapd, mgmt->sa, HOSTAPD_MODULE_IEEE80211,
@@ -1374,10 +1403,6 @@ void ieee802_11_mgmt(struct hostapd_data *hapd, u8 *buf, size_t len, u16 stype,
 	case WLAN_FC_STYPE_DEAUTH:
 		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "mgmt::deauth\n");
 		handle_deauth(hapd, mgmt, len);
-		break;
-	case WLAN_FC_STYPE_ACTION:
-		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "mgmt::action\n");
-		handle_action(hapd, mgmt, len);
 		break;
 	case WLAN_FC_STYPE_PROBE_RESP:
 		HOSTAPD_DEBUG(HOSTAPD_DEBUG_MINIMAL, "mgmt::probe_resp\n");
