@@ -210,6 +210,7 @@ static u32 airtime_link_metric_get(struct hostapd_data *hapd,
 	u32 tx_time, estimated_retx;
 	u64 result;
 
+	return 1;
 //	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
 
 	if (sta->fail_avg >= 100)
@@ -393,7 +394,10 @@ static void hwmp_preq_frame_process(struct hostapd_data *hapd,
 	orig_dsn = PREQ_IE_ORIG_DSN(preq_elem);
 	dst_flags = PREQ_IE_DST_F(preq_elem);
 
-	if (memcmp(dst_addr, hapd->own_addr, ETH_ALEN) == 0) {
+	if (is_broadcast_ether_addr(dst_addr)) {
+		forward = true;
+		reply = true;
+	} else if (memcmp(dst_addr, hapd->own_addr, ETH_ALEN) == 0) {
 		forward = false;
 		reply = true;
 		metric = 0;
@@ -450,13 +454,12 @@ static void hwmp_preq_frame_process(struct hostapd_data *hapd,
 			return;
 		}
 		--ttl;
-		memset(broadcast, 0xff, ETH_ALEN);
 		flags = PREQ_IE_FLAGS(preq_elem);
 		preq_id = PREQ_IE_PREQ_ID(preq_elem);
 		hopcount = PREQ_IE_HOPCOUNT(preq_elem) + 1;
 		mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
 				(orig_dsn), dst_flags, dst_addr,
-				(dst_dsn), broadcast,
+				(dst_dsn), hapd->broadcast,
 				hopcount, ttl, (lifetime),
 				(metric), (preq_id),
 				hapd);
@@ -587,7 +590,9 @@ void mesh_rx_path_sel_frame(struct hostapd_data *hapd,
 			/* Right now we support only one destination per PERR */
 			return;
 		hwmp_perr_frame_process(hapd, mgmt, elems.perr);
+		break;
 	default:
+		printf("%s: %d\n", __func__, mgmt->u.action.u.mesh_action.action_code);
 		return;
 	}
 
@@ -646,8 +651,6 @@ void hwmp_proactive_preq(void *eloop_ctx, void *timeout_ctx)
 {
 	struct hostapd_data *hapd = eloop_ctx;
 	eloop_register_timeout(2, 0, hwmp_proactive_preq, hapd, NULL);
-
-	printf("%s:\n", __func__);
 
 	mesh_path_sel_frame_tx(MPATH_PREQ, MP_F_RF, hapd->own_addr,
 			hapd->dsn, MP_F_RF, hapd->broadcast,
@@ -731,7 +734,7 @@ enddiscovery:
 }
 
 
-void mesh_path_timer(unsigned long data)
+void mesh_path_timer(void * eloop_ctx, void *timeout_ctx)
 {
 	struct mesh_path *mpath;
 /*

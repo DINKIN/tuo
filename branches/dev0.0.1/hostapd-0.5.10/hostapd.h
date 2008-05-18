@@ -194,6 +194,8 @@ struct hostapd_data {
 	u32 beacon_len;
 	u8 probe_req[MAX_MGMT_LEN];
 	u32 probe_req_len;
+
+	u32 mpaths;
 #endif
 
 #ifdef CONFIG_FULL_DYNAMIC_VLAN

@@ -7,6 +7,8 @@ typedef u8 bool;
 #define false 0
 #define true 1
 
+extern int mesh_allocated;
+
 /**
  * enum mesh_path_flags - mac80211 mesh path flags
  *
@@ -61,7 +63,8 @@ struct mesh_path {
 	u8 dst[ETH_ALEN];
 	struct hostapd_data *hapd;
 	struct sta_info *next_hop;
-//	struct timer_list timer;
+	void *timer_data;
+	void (*timer_function)(void * eloop_ctx, void *timeout_ctx);
 	u32 dsn;
 	u32 metric;
 	u8 hop_count;
@@ -71,11 +74,41 @@ struct mesh_path {
 	enum mesh_path_flags flags;
 };
 
+/**
+ * struct mesh_table
+ *
+ * @hash_buckets: array of hash buckets of the table
+ * @hashwlock: array of locks to protect write operations, one per bucket
+ * @hash_mask: 2^size_order - 1, used to compute hash idx
+ * @hash_rnd: random value used for hash computations
+ * @entries: number of entries in the table
+ * @free_node: function to free nodes of the table
+ * @copy_node: fuction to copy nodes of the table
+ * @size_order: determines size of the table, there will be 2^size_order hash
+ *	buckets
+ * @mean_chain_len: maximum average length for the hash buckets' list, if it is
+ *	reached, the table will grow
+ */
+struct mesh_table {
+	/* Number of buckets will be 2^N */
+	struct hlist_head *hash_buckets;
+	__u32 hash_rnd;			/* Used for hash generation */
+	u32 entries;		/* Up to MAX_MESH_NEIGHBOURS */
+	void (*free_node) (struct hlist_node *p, bool free_leafs);
+	void (*copy_node) (struct hlist_node *p, struct mesh_table *newtbl);
+	int size;
+	int mean_chain_len;
+};
+
+
 /* Mesh IEs constants */
 #define MESH_CFG_LEN		19
 
 /* Default maximum number of plinks per interface */
 #define MESH_MAX_PLINKS		256
+
+/* Maximum number of paths per interface */
+#define MESH_MAX_MPATHS		1024
 
 /* Pending ANA approval */
 #define PLINK_CATEGORY		30
@@ -104,11 +137,32 @@ enum plink_state {
 	PLINK_BLOCKED
 };
 
+
+void ieee80211s_init(void);
+void ieee80211s_stop(void);
+
+static inline int is_multicast_ether_addr(const u8 *addr)
+{
+	return (0x01 & addr[0]);
+}
+
+static inline int is_broadcast_ether_addr(const u8 *addr)
+{
+	return (addr[0] & addr[1] & addr[2] & addr[3] & addr[4] & addr[5]) == 0xff;
+}
+
+/* Private interfaces */
+/* Mesh tables */
+struct mesh_table *mesh_table_alloc(int size);
+void mesh_table_free(struct mesh_table *tbl, bool free_leafs);
+
 /* Mesh paths */
 struct mesh_path *mesh_path_lookup(u8 *dst);
 void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta);
 void mesh_path_tx_pending(struct mesh_path *mpath);
 int mesh_path_add(u8 *dst, struct hostapd_data *hapd);
+void mesh_path_timer(void * eloop_ctx, void *timeout_ctx);
+
 static inline void mesh_path_activate(struct mesh_path *mpath)
 {
 	mpath->flags |= MESH_PATH_ACTIVE | MESH_PATH_RESOLVED;
@@ -118,8 +172,15 @@ static inline void mesh_path_activate(struct mesh_path *mpath)
 int mesh_plink_open(struct hostapd_data *hapd, struct sta_info *sta);
 void mesh_neighbour_update(struct hostapd_data *hapd, u8 *hw_addr, u64 rates);
 
+/* Mesh Tables */
+int mesh_pathtbl_init(void);
+void mesh_pathtbl_unregister(void);
+
 /* HWMP */
 void hwmp_proactive_preq(void *eloop_ctx, void *timeout_ctx);
+void mesh_rx_path_sel_frame(struct hostapd_data *hapd,
+			    struct ieee80211_mgmt *mgmt,
+			    size_t len);
 
 /* */
 void mesh_mgmt_ies_add(u8 *pos, struct hostapd_data *hapd);

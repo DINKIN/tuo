@@ -572,6 +572,9 @@ static int hostapd_broadcast_wep_set(struct hostapd_data *hapd)
  */
 static void hostapd_cleanup(struct hostapd_data *hapd)
 {
+	if(mesh_allocated) {
+		ieee80211s_init();
+	}
 	hostapd_ctrl_iface_deinit(hapd);
 
 	free(hapd->default_wep_key);
@@ -1028,6 +1031,9 @@ static int hostapd_setup_bss(struct hostapd_data *hapd, int first)
 	int ssid_len, set_ssid;
 
 	memset(hapd->broadcast, 0xff, ETH_ALEN);
+	if(!mesh_allocated) {
+		ieee80211s_init();
+	}
 
 	if (!first) {
 		if (hostapd_mac_comp_empty(hapd->conf->bssid) == 0) {
