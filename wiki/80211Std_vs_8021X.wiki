@@ -36,5 +36,20 @@ c) Supplicant和AS互相生成PMK。PMK由AS通过安全通道传送给Authentic
 为关联所创建的PTKSA／GTKSA，以及受控和非受控端口，将统统被删除。
 
 
+= IBSS功能模型描述 =
 
+== 密钥使用 ==
+IBSS中：
+1. 两个STA之间的单播数据帧使用对偶密钥来保护。该密钥是PTK的一部分，通过四路握手衍生出来的。
+2. 广播数据帧使用B1密钥来保护，B1由传输数据的STA产生。为了使其他STA能够解密数据帧，B1必须发送给IBSS中的所有STA。B1在EAPOL-Key帧中传递，使用PTK的KEK部分加密，通过KCK来保证不被修改。
+
+注意：标准中的IBSS四路握手示例和802.1X使用示例非常有用。
+
+= Authenticator到AS的协议 =
+暂不考虑。（因为在大多数情况下，AS和Authenticator在一台机器上）
+
+= PMSKA缓存 =
+
+认证双方可以缓存对偶主密钥安全关联（PMSKA），也可以在任何时候删除。
+STA可以在关联／重关联请求帧中包含一个PMK或者PSK的标识列表。每一个记录用来表示一个PMSKA，包含一个PMK。Authenticator在Message1或者四路握手中选择PMK或PSK。
 
