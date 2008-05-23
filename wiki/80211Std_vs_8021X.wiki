@@ -2,14 +2,39 @@
 
 = Introduction =
 
+RSNA网络依赖于802.1X提供验证服务。802.1X的访问控制机制适用于IBSS中的STA和AP， STA和STA。 AP和STA都可以作Authenticator, 以及AS, Supplicant。
+
+802.11使用802.1X的下面两种机制：
+1. 802.1X有受控端口和非受控端口两种。验证帧通过非受控端口发送。
+2. 802.1X在认证之后进行加密密钥的交换。
+
+注意：在ESS中，每一个AP都包含Authenticator，而每一个STA都包含Supplicant.
+
+= AKM使用802.1X和使用PSK的操作过程 =
+
+== AS的AKM操作 ==
+
+a) 假定Authenticator和AS之间的通道已经建立好了并足够安全。
+b) STA通过被动监听Beacon报文或者主动探察来获取AP的安全策略。如果使用802.1X，EAP的认证过程将从AP发送一个EAP-Request报文或者STA发送一个EAPOL-Start报文开始。EAP认证报文在非受控端口传递。
+c) Supplicant和AS互相生成PMK。PMK由AS通过安全通道传送给Authenticator。
+
+接下来是使用PMK进行的四路握手，由Authenticator首先发起：
+  * 确认对方有PMK
+  * 确认对方的PMK没有过期
+  * 从PMK中衍生出PTK
+  * 把对偶加密和完整性密钥安装到802.11
+  * 从Authenticator传送GTK和GTK的序列号给Supplicant，安装到STA。（或者AP，如果AP还没有安装的话）
+  * 确认加密套件的选择。
+之后，双方的控制端口被打开，允许传输一般的数据。这一过程见标准中的Figure 5-11，5-12和5-13。
+
+如果Authenticator后来改变了GTK，新的GTK及其序列号通过Group Key Handshake传送给Supplicant，使用的是EAPOL-Key报文。
+
+== AS的PSK操作 ==
+与上面基本相同，只是在开始监听和探察时，STA获得了AP的安全策略信息，知道后续操作中的PMk是PSK.
+
+== 解除关联 ==
+为关联所创建的PTKSA／GTKSA，以及受控和非受控端口，将统统被删除。
 
 
-Add your content here.
 
 
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
