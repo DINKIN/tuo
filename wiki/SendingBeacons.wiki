@@ -1,4 +1,4 @@
-#Summary AP mode we enable the beacon timers and SWBA interrupts to prepare beacon frames.
+#summary AP mode we enable the beacon timers and SWBA interrupts to prepare beacon frames.
 
 = MAC80211 =
 
