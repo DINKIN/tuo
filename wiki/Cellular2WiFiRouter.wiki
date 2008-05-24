@@ -3,6 +3,7 @@
 = Cellular (CDMA, EVDO, GPRS, EDGE, etc.) to Wi-Fi Hotspot Router =
 
 [http://sewelldirect.com/evdo-wifi-router.asp]
+
 Description
 
 Imagine bringing your own wireless 802.11 signal anywhere you go. The router, in conjunction with the CDMA, EVDO, GPRS, EDGE, UMTS, and HSDPA PCMCIA card, allows you to share a wireless internet connection using the Verizon/Sprint EVDO signal anywhere.
@@ -13,3 +14,20 @@ Pricing & Discounts
 10+	$724.95
 30+	$719.95
 100+	$699.95
+
+= 3G Phoebus Portable Cellular Wi-Fi Router =
+
+Description
+
+Carry Around a Halo of Wi-Fi Wherever You Go
+
+The 3G Phoebus portable cellular Wi-Fi router is the easiest, most economical way to convert CDMA, EVDO, GPRS, EDGE, UMTS, and HSDPA signals into a Wi-Fi/wired signal that can be shared simultaneously with any allowed user group.
+
+The Easiest Cellular Wi-Fi Router on the Market
+
+The 3G Phoebus accepts most cellular PCMCIA cards from the market today and you won't have to worry about different drivers or client software. Simply plug the PCMCIA card into the MB6000 and turn the power on and you will instantly be able to put multiple computers (ethernet wired or wireless) on the internet.
+
+Pricing & Discounts
+1+	$218.95
+3+	$216.95
+10+	$215.95
