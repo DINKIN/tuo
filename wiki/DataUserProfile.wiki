@@ -1,0 +1,3 @@
+l GPRS peak traffic: 90kB/user/15min
+l Average 800bits/s/user/BH
+l 250kB/user/day
