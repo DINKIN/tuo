@@ -32,6 +32,7 @@ Next Step
 3G-to-802.11
 Zigbee-to-802.11
 WiMax-to-802.11
+Satelite-to-802.11
 
 = 开发计划 =
   # Build development environment. (Finish)
