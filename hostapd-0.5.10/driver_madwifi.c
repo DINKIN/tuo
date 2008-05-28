@@ -1205,8 +1205,8 @@ static void handle_frame(struct hostapd_data *hapd, const u8 *buf, size_t len)
 
 	if (type != WLAN_FC_TYPE_MGMT || stype != WLAN_FC_STYPE_BEACON ||
 	    hapd->conf->debug >= HOSTAPD_DEBUG_EXCESSIVE) {
-		wpa_hexdump(MSG_MSGDUMP, "Received management frame",
-			    buf, len);
+//		wpa_hexdump(MSG_MSGDUMP, "Received management frame",
+//			    buf, len);
 	}
 
 	ver = fc & WLAN_FC_PVER;
@@ -1329,7 +1329,7 @@ madwifi_init(struct hostapd_data *hapd)
 	memset(&iwr, 0, sizeof(iwr));
 	strncpy(iwr.ifr_name, drv->iface, IFNAMSIZ);
 
-	iwr.u.mode = IW_MODE_MASTER;
+	iwr.u.mode = IW_MODE_ADHOC;
 
 	if (ioctl(drv->ioctl_sock, SIOCSIWMODE, &iwr) < 0) {
 		perror("ioctl[SIOCSIWMODE]");
@@ -1451,9 +1451,9 @@ static struct hostapd_hw_modes * madwifi_get_hw_feature_data(void *priv,
 	*num_modes = 1;
 	*flags = 0;
 
-	mode->mode = HOSTAPD_MODE_IEEE80211B;
+	mode->mode = HOSTAPD_MODE_IEEE80211G;
 	mode->num_channels = 14;
-	mode->num_rates = 4;
+	mode->num_rates = 8;
 
 	clen = mode->num_channels * sizeof(struct hostapd_channel_data);
 	rlen = mode->num_rates * sizeof(struct hostapd_rate_data);
@@ -1478,6 +1478,14 @@ static struct hostapd_hw_modes * madwifi_get_hw_feature_data(void *priv,
 	mode->rates[2].flags = HOSTAPD_RATE_CCK;
 	mode->rates[3].rate = 110;
 	mode->rates[3].flags = HOSTAPD_RATE_CCK;
+	mode->rates[4].rate = 180;
+	mode->rates[4].flags = HOSTAPD_RATE_CCK;
+	mode->rates[5].rate = 240;
+	mode->rates[5].flags = HOSTAPD_RATE_CCK;
+	mode->rates[6].rate = 360;
+	mode->rates[6].flags = HOSTAPD_RATE_CCK;
+	mode->rates[7].rate = 540;
+	mode->rates[7].flags = HOSTAPD_RATE_CCK;
 
 	return mode;
 }
