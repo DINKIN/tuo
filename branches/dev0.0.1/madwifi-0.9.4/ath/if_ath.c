@@ -4218,7 +4218,6 @@ ath_beacon_send(struct ath_softc *sc, int *needmark)
 	int slot;
 	u_int32_t bfaddr;
 
-	return;
 	/*
 	 * Check if the previous beacon has gone out.  If
 	 * not don't try to post another, skip this period

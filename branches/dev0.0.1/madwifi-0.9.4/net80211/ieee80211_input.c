@@ -1074,6 +1074,10 @@ ieee80211_deliver_data(struct ieee80211_node *ni, struct sk_buff *skb)
 	struct net_device *dev = vap->iv_dev;
 	struct ether_header *eh = (struct ether_header *) skb->data;
 
+	printk("%s: %x:%x:%x:%x:%x:%x, %x:%x:%x:%x:%x:%x\n", __func__,
+		eh->ether_dhost[0], eh->ether_dhost[1], eh->ether_dhost[2], eh->ether_dhost[3], eh->ether_dhost[4], eh->ether_dhost[5], 
+		eh->ether_shost[0], eh->ether_shost[1], eh->ether_shost[2], eh->ether_shost[3], eh->ether_shost[4], eh->ether_shost[5] 
+		);
 #ifdef ATH_SUPERG_XR 
 	/*
 	 * if it is a XR vap, send the data to associated normal net
@@ -1125,6 +1129,38 @@ ieee80211_deliver_data(struct ieee80211_node *ni, struct sk_buff *skb)
 		}
 	}
 
+	/* Mesh forwarding */
+/*	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+		u8 *mesh_ttl = &((struct ieee80211s_hdr *)skb->cb)->ttl;
+		(*mesh_ttl)--;
+
+		if (is_multicast_ether_addr(skb->data)) {
+			if (*mesh_ttl > 0) {
+				xmit_skb = skb_copy(skb, GFP_ATOMIC);
+				if (!xmit_skb && net_ratelimit())
+					printk(KERN_DEBUG "%s: failed to clone "
+					       "multicast frame\n", dev->name);
+				else
+					xmit_skb->pkt_type = PACKET_OTHERHOST;
+			} else
+				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.sta,
+							     dropped_frames_ttl);
+		} else if (skb->pkt_type != PACKET_OTHERHOST &&
+			compare_ether_addr(dev->dev_addr, skb->data) != 0) {
+			if (*mesh_ttl == 0) {
+				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.sta,
+							     dropped_frames_ttl);
+				dev_kfree_skb(skb);
+				skb = NULL;
+			} else {
+				xmit_skb = skb;
+				xmit_skb->pkt_type = PACKET_OTHERHOST;
+				if (!(dev->flags & IFF_PROMISC))
+					skb  = NULL;
+			}
+		}
+	}
+*/
 	if (skb != NULL) {
 		skb->dev = dev;
 		
@@ -2236,7 +2272,7 @@ forward_mgmt_to_app(struct ieee80211vap *vap, int subtype, struct sk_buff *skb,
 		break;
 	}
 
-	vap->app_filter = 0xffff;
+	vap->app_filter = 0xffff & ~IEEE80211_FC0_SUBTYPE_BEACON;
 	if (filter_type && ((vap->app_filter & filter_type) == filter_type)) {
 		struct sk_buff *skb1;
 
@@ -3035,8 +3071,8 @@ ieee80211_recv_mgmt(struct ieee80211_node *ni, struct sk_buff *skb,
 					IEEE80211_FC0_SUBTYPE_SHIFT],
 				"%s", "recv'd rate set invalid");
 		} else {
-			// IEEE80211_SEND_MGMT(ni,
-			//	IEEE80211_FC0_SUBTYPE_PROBE_RESP, 0);
+			IEEE80211_SEND_MGMT(ni,
+				IEEE80211_FC0_SUBTYPE_PROBE_RESP, 0);
 		}
 		if (allocbs && vap->iv_opmode != IEEE80211_M_IBSS) {
 			/*
