@@ -1,5 +1,13 @@
 #Cellular (CDMA, EVDO, GPRS, EDGE, WiMax, etc.) to Wi-Fi Hotspot Router.
 
+= 3G or GPRS card with linux driver =
+  * Many datacards made by Huawei support linux driver.
+  * Teltonika 3G H7.2 Modem USB : Drivers available for Win2000 SP4 /XP /Vista/Tablet XP Pro /Mac OS X /Linux.
+  * Vodafone Mobile Connect Card driver for Linux is a tool that allows you to establish a connection to the Internet using 3G cards. It also allows to send and receive short messages from your computer. The cards currently supported are: Huawei E620, Huawei E220 and Option GlobeTrotter 3G+ EMEA .
+  * Vodafone 3G Datacard (UMTS/GPRS/GSM): [http://www.pharscape.org/content/view/28/]
+  * Linux Compatibility Guides for 3G (WCDMA, UMTS, HSDPA) Laptops, Notebooks and USB Adapters. [http://tuxmobil.org/linux_on_laptops_with_umts_cards.html]
+  * Linux PCMCIA/CF/CardBus Card Survey (sorted by Manufacturer). [http://tuxmobil.org/pcmcia_linux.html]
+
 = Cellular (CDMA, EVDO, GPRS, EDGE, etc.) to Wi-Fi Hotspot Router =
 
 [http://sewelldirect.com/evdo-wifi-router.asp]
