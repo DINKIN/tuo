@@ -19,4 +19,4 @@ Iperf sender on laptop1 and receiver on soekris box.
 5       0.622
 }}}
 
-I found if there are nodes who can't be heard by other nodes, the performance drop a lot. I think the reason is the carrier sensing doesn't work in this case.
+I found if there are nodes who can't be heard by other nodes, the performance drop a lot. I think the reason is the carrier sensing doesn't work in this case. In this case, the TDMA may be helpful.
