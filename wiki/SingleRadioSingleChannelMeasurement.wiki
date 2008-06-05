@@ -1,0 +1,18 @@
+#Single Radio Single Channel Measurement by 802.11g
+
+= Multi-Hop Experiments =
+
+Node is soekris net-4801 box.
+
+Topology
+
+Laptop1 <-> Node1 <-> Node2 <-> Node3 <-> Node4
+
+Iperf sender on laptop1 and receiver on soekris box.
+
+{{{
+#Hop    TCP Throughput(Mbps)
+1       6.87
+2       8.81
+3       4.07
+}}}
