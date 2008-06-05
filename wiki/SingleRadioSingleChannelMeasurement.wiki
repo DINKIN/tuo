@@ -15,4 +15,8 @@ Iperf sender on laptop1 and receiver on soekris box.
 1       6.87
 2       8.81
 3       4.07
+4       2.5
+5       0.622
 }}}
+
+I found if there are nodes who can't be heard by other nodes, the performance drop a lot. I think the reason is the carrier sensing doesn't work in this case.
