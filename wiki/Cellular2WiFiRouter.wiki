@@ -1,5 +1,7 @@
 #Cellular (CDMA, EVDO, GPRS, EDGE, WiMax, etc.) to Wi-Fi Hotspot Router.
 
+上述网络的一个共同特点是上传速度要比下载速度低1-2个数量级，这是因为下行链路可以使用大功率和高增益天线来增加信号能量，但是对于上行链路，移动终端使用电池和体积小，上行链路的信号能量很弱。所以这类网桥的一个特色就是采用大功率和高增益天线来增强上行链路的信号强度，以提供更好的上行带宽。
+
 = 3G or GPRS card with linux driver =
   * Many datacards made by Huawei support linux driver.
   * Teltonika 3G H7.2 Modem USB : Drivers available for Win2000 SP4 /XP /Vista/Tablet XP Pro /Mac OS X /Linux.
