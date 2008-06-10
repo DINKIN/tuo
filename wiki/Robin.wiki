@@ -11,4 +11,6 @@ Robin update its information to server by http/https.
 0-59/5  * * * * /sbin/update
 22              * * * * /sbin/upgrade
 }}}
-  First line run the script /sbin/update to update the information to server.
+  First line run the script /sbin/update every 5 minutes to update the information to server.
+  Second line run the script /sbin/upgrade on 22 minutes for each hour to upgrade the firmware.
+  This file format detail can be found in crontab.
