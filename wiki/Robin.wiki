@@ -1,0 +1,14 @@
+#Overview of Robin
+
+= Introduction =
+
+
+= Update =
+
+Robin update its information to server by http/https.
+  * crond -c /etc/crontabs. Crond execute scheduled commands. /etc/crontabs/root as follow
+{{{
+0-59/5  * * * * /sbin/update
+22              * * * * /sbin/upgrade
+}}}
+  First line run the script /sbin/update to update the information to server.
