@@ -14,3 +14,4 @@ Robin update its information to server by http/https.
   First line run the script /sbin/update every 5 minutes to update the information to server.
   Second line run the script /sbin/upgrade on 22 minutes for each hour to upgrade the firmware.
   This file format detail can be found in crontab.
+  * /etc/update/ directory contains all update related file. Log is in /tmp/update.log
