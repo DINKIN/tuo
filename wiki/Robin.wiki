@@ -1,6 +1,9 @@
 #Overview of Robin
 
-= Introduction =
+= Compile =
+
+Have a look at readme on
+[https://www2.hosted-projects.com/trac/ansanto/robin/browser/compiling_robin]
 
 
 = Update =
