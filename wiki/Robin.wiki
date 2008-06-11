@@ -5,6 +5,9 @@
 Have a look at readme on
 [https://www2.hosted-projects.com/trac/ansanto/robin/browser/compiling_robin]
 
+= Flash =
+
+[http://www.open-mesh.com/activekb/questions/8/Flashing+the+Accton+Mini-Router+with+ROBIN]
 
 = Update =
 
