@@ -15,3 +15,8 @@ Robin update its information to server by http/https.
   Second line run the script /sbin/upgrade on 22 minutes for each hour to upgrade the firmware.
   This file format detail can be found in crontab.
   * /etc/update/ directory contains all update related file. Log is in /tmp/update.log
+
+= UCI =
+
+/bin/uci is a script to access the configuration file. It use the /etc/functions.sh and the scripts on /lib/config to access the configuration files on /etc/config
+
