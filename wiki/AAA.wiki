@@ -1,0 +1,11 @@
+#Authentication & Authorization & Accounting
+
+= Radius =
+
+[http://en.wikipedia.org/wiki/List_of_RADIUS_Servers]
+We choose FreeRADIUS.
+
+
+= Hostapd =
+
+[http://hostap.epitest.fi/hostapd/]
