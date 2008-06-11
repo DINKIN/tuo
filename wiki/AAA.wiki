@@ -9,3 +9,6 @@ We choose FreeRADIUS.
 = Hostapd =
 
 [http://hostap.epitest.fi/hostapd/]
+
+readme. Introduce how to configure the 802.1x and radius
+[http://hostap.epitest.fi/gitweb/gitweb.cgi?p=hostap.git;a=blob_plain;f=hostapd/README]
