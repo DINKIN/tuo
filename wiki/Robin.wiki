@@ -22,6 +22,7 @@ Robin update its information to server by http/https.
   This file format detail can be found in crontab.
   * /etc/update/ directory contains all update related file. Log is in /tmp/update.log
   * /etc/update/received.clean contains the configuration from the server. /etc/update/update.arg is the uploading information from the local in url format.
+  * The scripts in /usr/sbin/update-* will use the file in /etc/update to update the node.
 
 = UCI =
 
