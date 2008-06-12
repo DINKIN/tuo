@@ -8,6 +8,7 @@ Have a look at readme on
 = Flash =
 
 [http://www.open-mesh.com/activekb/questions/8/Flashing+the+Accton+Mini-Router+with+ROBIN]
+Use a cross linked cable
 
 = Update =
 
