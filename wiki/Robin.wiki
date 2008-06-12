@@ -8,7 +8,60 @@ Have a look at readme on
 = Flash =
 
 [http://www.open-mesh.com/activekb/questions/8/Flashing+the+Accton+Mini-Router+with+ROBIN]
-Use a cross linked cable
+{{{
+   1.
+
+      Boot your Linux computer (or Live CD) and bring up a terminal window (under "Applications", then "Accessories", then "terminal" on Ubuntu)
+   2.
+
+      Make sure it is connected to the internet, then type the following to download the files you will need:
+
+      sudo apt-get upgrade
+      sudo apt-get install wget
+      wget http://www.open-mesh.com/flashing/openwrt-atheros-2.6-vmlinux.gz
+      wget http://www.open-mesh.com/flashing/openwrt-atheros-2.6-root.jffs2-64k
+      wget http://www.open-mesh.com/flashing/easyflash
+      wget http://www.open-mesh.com/flashing/flash
+      chmod +x easyflash
+      chmod +x flash
+   3.
+
+      Plug in your Accton or FON 2200 (check the bottom label for the model number) to your Ethernet LAN port on your computer. *Use a cross linked cable*
+   4.
+
+      Type: ./flash (note: If your router is NOT connected to eth0, modify the file "flash" accordingly.)
+   5.
+
+      Plug in the router to A/C power.
+   6.
+
+      You should see something like this displayed:
+
+      No packet
+      No packet
+      Peer MAC: 00:18:84:80:67:1C (this will be the MAC address of your router)
+      You MAC: 00:ba:be:ca:ff:ee
+      Your IP: 192.168.1.0
+      Setting IP address...
+      Loading rootfs...
+      Sending rootfs. xxxx blocks...
+      Initializing partiions...
+      Rootfs partition size now 0x006f0000
+      Flashing rootfs...
+      Loading Kernel...
+      Sending kernel, xxxx blocks...
+      Flashing Kernel...
+      Setting boot_script_data...
+
+      Done. Restarting device...
+   7.
+
+      Go get lunch. This will take 15-30 minutes, depending upon the flash chip speed in your router. DO NOT INTERRUPT!
+   8.
+
+      When it is done, the Flash Utility will automatically close. 
+}}}
+
 
 = Update =
 
