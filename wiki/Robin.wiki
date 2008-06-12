@@ -128,7 +128,7 @@ UploadLimit 100
 GatewayInterface     br-lan
 }}}
 
-You should change the DownloadLimit or UploadLimit in both files.
+You should change the DownloadLimit or UploadLimit in nodogsplash.conf.std. When node reboot, system will copy nodogsplash.conf.std to nodogsplash.conf.
 
 Now, open-mesh doesn't support update the DownloadLimit and UploadLimit.
 
