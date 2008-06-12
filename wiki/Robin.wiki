@@ -48,3 +48,46 @@ For open access ap, there are download and upload limit. But I didn't figure out
 = DHCP =
 
 DNSMasq works as DHCP server on open mesh AP very well. But it can't work with MySecure.
+
+= Routing Table =
+
+To have a look robin's routing table, you should use ip rule and ip route show table XX instead of route, which just output the main routing table. The follow is an example.
+
+{{{
+root@open-mesh:/# ip rule
+0:      from all lookup local 
+6600:   from all to 5.0.0.0/8 lookup 66 
+6699:   from all lookup 65 
+6700:   from all to 5.0.0.0/8 lookup 67 
+6800:   from all iif lo lookup 68 
+6801:   from 127.0.0.0/8 lookup 68 
+6802:   from 10.104.234.0/25 lookup 68 
+6803:   from 10.104.234.128/25 lookup 68 
+32766:  from all lookup main 
+32767:  from all lookup default 
+root@open-mesh:/# 
+root@open-mesh:/# /usr/sbin/ip route show table local
+broadcast 10.104.234.255 dev ath2  proto kernel  scope link  src 10.104.234.129 
+broadcast 127.255.255.255 dev lo  proto kernel  scope link  src 127.0.0.1 
+broadcast 5.0.0.0 dev ath0  proto kernel  scope link  src 5.128.104.234 
+local 169.254.0.1 dev gate0  proto kernel  scope host  src 169.254.0.1 
+broadcast 10.104.234.127 dev br-lan  proto kernel  scope link  src 10.104.234.1 
+broadcast 10.104.234.0 dev br-lan  proto kernel  scope link  src 10.104.234.1 
+local 10.104.234.1 dev br-lan  proto kernel  scope host  src 10.104.234.1 
+broadcast 10.104.234.128 dev ath2  proto kernel  scope link  src 10.104.234.129 
+broadcast 5.255.255.255 dev ath0  proto kernel  scope link  src 5.128.104.234 
+local 5.128.104.234 dev ath0  proto kernel  scope host  src 5.128.104.234 
+local 10.104.234.129 dev ath2  proto kernel  scope host  src 10.104.234.129 
+broadcast 127.0.0.0 dev lo  proto kernel  scope link  src 127.0.0.1 
+local 127.0.0.1 dev lo  proto kernel  scope host  src 127.0.0.1 
+local 127.0.0.0/8 dev lo  proto kernel  scope host  src 127.0.0.1 
+root@open-mesh:/# 
+root@open-mesh:/# /usr/sbin/ip route show table 68   
+throw 10.104.234.0/25  proto static 
+throw 10.104.234.128/25  proto static 
+throw 5.0.0.0/8  proto static 
+throw 127.0.0.0/8  proto static 
+default dev gate0  proto static  scope link  src 169.254.0.1 
+}}}
+
+*Important: You have to use /usr/sbin/ip instead of /bin/ip*
