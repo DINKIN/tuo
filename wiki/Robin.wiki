@@ -86,7 +86,11 @@ script /sbin/watchout4node watch the follow aspects:
 
   According the check results, the node will reboot or /sbin/node_restart
 
-= Speed Limit =
+= Nodogsplash =
+
+Nodogsplash offers a simple way to provide restricted access to an internet connection. It is intended for use on wireless access points running OpenWRT (but may also work on other Linux-based devices).
+
+== Speed Limit ==
 
 For open access ap, there are download and upload limit. But I didn't figure out how to set this value on the node.
 
