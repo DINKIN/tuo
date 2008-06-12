@@ -96,6 +96,42 @@ Nodogsplash also optionally implements basic traffic control on its managed inte
 
 Nodogsplash implements this functionality by enabling two intermediate queue devices (IMQ's), one for upload and one for download, and attaching simple rate-limited HTB qdiscs to them. Rules are inserted in the router's iptables mangle PREROUTING and POSTROUTING tables to jump to these IMQ's. The result is simple but effective tail-drop rate limiting (no packet classification or fairness queueing is done). 
 
+There are two configuration file in /etc/nodogsplash, nodogsplash.conf nodogsplash.conf.std. The content of those files is as follow.
+
+{{{
+FirewallRuleSet preauthenticated-users {
+FirewallRule allow
+}
+FirewallRuleSet authenticated-users {
+FirewallRule allow
+}
+FirewallRuleSet users-to-router {
+FirewallRule allow udp port 53
+FirewallRule allow tcp port 53
+FirewallRule allow udp port 67
+FirewallRule allow tcp port 20
+FirewallRule allow tcp port 21
+FirewallRule allow tcp port 22
+FirewallRule allow tcp port 23
+FirewallRule allow tcp port 80
+FirewallRule allow tcp port 443
+}
+GatewayName orange test
+RedirectURL http://
+ClientIdleTimeout 1440
+ClientForceTimeout 1440
+AuthenticateImmediately 1
+TrafficControl 1
+DownloadLimit 4000
+UploadLimit 100
+#bogus2 772827811
+GatewayInterface     br-lan
+}}}
+
+You should change the DownloadLimit or UploadLimit in both files.
+
+Now, open-mesh doesn't support update the DownloadLimit and UploadLimit.
+
 == ndsctl ==
 
 = DHCP =
