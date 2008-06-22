@@ -22,7 +22,7 @@ Have a look at readme on
       chmod +x easyflash
       chmod +x flash
 
-   3.Plug in your Accton or FON 2200 (check the bottom label for the model number) to your Ethernet LAN port on your computer. *Use a cross linked cable. sudo ifconfig eth0 up*
+   3.Plug in your Accton or FON 2200 (check the bottom label for the model number) to your Ethernet LAN port on your computer. *Use a cross linked cable or a switch. sudo ifconfig eth0 up*
    
       Type: ./flash (note: If your router is NOT connected to eth0, modify the file "flash" accordingly.)
 
