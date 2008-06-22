@@ -13,6 +13,10 @@ We choose FreeRADIUS.
 readme. Introduce how to configure the 802.1x and radius
 [http://hostap.epitest.fi/gitweb/gitweb.cgi?p=hostap.git;a=blob_plain;f=hostapd/README]
 
+= Captive Portal & Radius =
+
+CoovaChilli
+[http://coova.org/wiki/index.php/CoovaChilli]
 = WPA/802.1x/EAP =
 WPA = 'WiFi protected access' acronym developed by wifi
 committee. It implies wireless access protected with
