@@ -12,3 +12,36 @@ We choose FreeRADIUS.
 
 readme. Introduce how to configure the 802.1x and radius
 [http://hostap.epitest.fi/gitweb/gitweb.cgi?p=hostap.git;a=blob_plain;f=hostapd/README]
+
+= WPA/802.1x/EAP =
+WPA = 'WiFi protected access' acronym developed by wifi
+committee. It implies wireless access protected with
+advanced Wireless security features.
+
+802.1x = IEEE standard which defines port based Access control
+Mechanism.
+
+EAP = Extensible Authentication protocol, It is a framework
+used in wired as well as wireless infrasture that
+uses authentication server say RADIUS, to
+authenticate users.
+
+Lately, I found EAP,802.1x and WPA terms has been used interchangeably in supposedly "technical" magazine and
+I think it is not right.
+
+802.1x is a IEEE standard that defines port based access control, It proposes EAP as one of the authentication method as a method of Advanced authentication using TLS (Transport Layer security)and TTLS(Tunneled Transport Layered Security) , PEAP, LEAP etc. authentication protocols.
+
+WPA is not necessarily EAP, a preshared Key (modelled after classic 10 hex digit WEP) can also be a protection mechanism and thus infrastrutures without EAP like authetication mechanism can be still termed as "with WPA".
+
+802.1x is not necessarily has to be with EAP, It can be with say PPP as well.
+
+Port based Access Control using EAP as per 802.1x standard means:
+An access control device (sitting on the edge of the ISP network servicing subscriber/end-user)/Authenticator blocks
+L3 connectivity for a particular L2 address untill its UserID+password, userID+client-certificate etc. based autheticity is verified using Authetication Sever.
+
+Host+AP+Radius server combo would work as below:
+EAP messages (Access-request, Access-challenge) are encapsulated as L2 payloads (without L3,L4 headers) between Authenticator (say, Access Point) and supplicant(host,laptop).
+The responses are relayed as EAP messages wth regular networking heades(UDP-IP packets carrying say Radius headers with EAP-Access Requests) to Authentication Server (say, Radius) of ISP infrastructure.
+Responses from Radius/ Authentication server (say Access-Accept)to AP/Autheticator are relayed again as EAP messages as L2-payload from AP/Authenticator to Host/Supplicant.
+
+Supplicant <---EAP-L2---> Authenticator <---EAP-Radius-UDP-IP-L2------> Authtentication Server
