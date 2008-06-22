@@ -7,7 +7,14 @@ Have a look at readme on
 
 = Flash =
 
+The different FON and Meraki devices, with Atheros SoC, use the RedBoot bootloader and have either 4/16 or 8/32 MB of Flash/RAM and the default firmware is in both cases based on OpenWrt. It is fairly easy to substitute the existing system with the current OpenWrt Kamikaze release. The initial step required to install OpenWrt Kamikaze on these devices is the configuration of the RedBoot bootloader. It is possible to re-flash these devices without changing the bootloader configuration, but it is not recommended. *The argument is quite simple: Recovery from a firmware re-flash gone bad is only possible if RedBoot is setup to accept "inquireries" before boot of the system, from the flash chip.* Apart from this, *the size of the kernel of Kamikaze has changed so it is needed to alter the layout of the partitions on the devices.* Such re-partitioning is done with the help of RedBoot.
+
+[http://wiki.openwrt.org/OpenWrtDocs/Hardware/Fon/Fonera]
 [http://www.open-mesh.com/activekb/questions/8/Flashing+the+Accton+Mini-Router+with+ROBIN]
+
+You need low-level access to the ethernet device,
+(run as root on Linux, install WinPcap on Windows see http://winpcap.org/ )
+[http://wiki.openwrt.org/OpenWrtDocs/Hardware/Meraki/Mini]
 {{{
    1.Boot your Linux computer (or Live CD) and bring up a terminal window (under "Applications", then "Accessories", then "terminal" on Ubuntu)
 
