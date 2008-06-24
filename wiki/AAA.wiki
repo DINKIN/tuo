@@ -15,6 +15,8 @@ readme. Introduce how to configure the 802.1x and radius
 
 = Captive Portal & Radius =
 
+We choose the CoovaChilli.
+
 CoovaChilli[http://coova.org/wiki/index.php/CoovaChilli] (Based chillispot)
 
 chillispot[http://www.chillispot.info/index.html]
@@ -24,6 +26,7 @@ nodogsplash[http://kokoro.ucsd.edu/nodogsplash/]
 
 m0n0wall [http://m0n0.ch/wall/]
 
+== CoovaChilli ==
 
 = WPA/802.1x/EAP =
 WPA = 'WiFi protected access' acronym developed by wifi
