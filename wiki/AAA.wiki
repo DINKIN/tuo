@@ -7,6 +7,8 @@ We choose FreeRADIUS.
 
 == Management ==
 
+we choose the daloRADIUS.
+
 [http://infodotnet.blogspot.com/2008/03/free-software-for-freeradius-user.html]
 dolaRADIUS
 daloRADIUS is an advanced RADIUS web management application aimed at managing hotspots and general-purpose ISP deployments. It features user management, graphical reporting, accounting, a billing engine and integrates with GoogleMaps for geo-locating.
