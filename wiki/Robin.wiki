@@ -1,5 +1,10 @@
 #Overview of Robin
 
+= Password =
+ssh, security ap passwords are both
+
+0p3nm35h
+
 = Compile =
 
 Have a look at readme on
