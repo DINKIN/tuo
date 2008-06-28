@@ -21,6 +21,24 @@ http://search.china.alibaba.com/search/offer_search.htm?keywords=%B0%E5%D7%B4%CC
 
 802. 11b / G Mini Router
 [http://yufotech.trustpass.alibaba.com/product/101002791/802_11b_G_Mini_Router.html]
+    Atheros Communications' AR5007AP-G is a complete 802.11b/g wireless access point SoC that integrates a wireless network processor, media access controller (MAC), baseband, and all radio functions up to the antenna.
+
+    The chip represents a component reduction of 40 percent compared to the company's AR5006AP-G access point solution. It supports IEEE 802.11i security and 802.11e quality of service (QoS) specifications.
+
+    Key WLAN components that have been integrated onto the device include a power amplifier, low noise amplifiers (LNA), antenna switch, and transmit/receive filtering.
+
+    According to the company, this is the most highly integrated single-chip wireless LAN (WLAN) solution for access point and router products.
+
+    The AR5007AP-G is priced at $12.50 each in 10,000-unit quantities. It is available in volume quantities now. More information is available at www.atheros.com. 
+
+I think Meraki indoor unit is based on Atheros AR5007AP-G design which has power amplifier, LNA and even antenna TX/RX switch all inside the SoC. This old news item ( »www.wirelessnetdesignline.com/sh···74401548) mention SoC cost was $12.50 in 10K volume.
+
+I hear that Accton and other ODMs are selling fully packaged white-box versions to OEMs at $25 range and many wholesale at $49 or lower. We need a few WISP-OS companies to sell low-cost firmware licenses for these units.
+
+AP51 seems to be the Atheros AR5006AP-G reference design. I had assumed AR5007AP-G which uses chip marked AR2317
+
+The biggest downside of AR2315/AR2316 is overheating problem and that's why every major vendor is already upgrading or has upgraded to AR2317/AR2318.
+
 
 11a/b/g 108Mpbs Atheros SOC modual-500mW
     * Other Price Terms: $100
