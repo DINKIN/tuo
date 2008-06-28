@@ -1,0 +1,29 @@
+#summary One-sentence summary of this page.
+
+= Antenna =
+
+我们需要工作在2.4GHz的板状天线.我发现国内定向天线的供应还是很充足的,我觉得我们可以从价格,供货远近,供货时间,OEM能力等方面挑选一些公司(你看还有什么需要注意的).
+
+北京胜百天线有限公司
+SPDB-2400-14V45
+http://www.sunparl.com/showpro.asp?id=774&bclass=%B0%E5%D7%B4%CC%EC%CF%DF&rootid=
+
+廊坊市大洋洲电子科技有限公司
+http://cn.lfdyz.cnele.com/
+
+下面的链接有4款板状定向天线,都在300多,也就是在$50左右,所以在国内搞定定向天线应该不是问题.
+http://www.sun118.com/athena/offerlist/bjhengan-sale-1-true-487143.html
+
+这是淘宝上的板状天线
+http://search.china.alibaba.com/search/offer_search.htm?keywords=%B0%E5%D7%B4%CC%EC%CF%DF
+
+= Atheros SOC =
+
+802. 11b / G Mini Router
+[http://yufotech.trustpass.alibaba.com/product/101002791/802_11b_G_Mini_Router.html]
+
+11a/b/g 108Mpbs Atheros SOC modual-500mW
+    * Other Price Terms: $100
+    * Supply Ability: 1000pcs per month
+    * Delivery Time: 14days
+
