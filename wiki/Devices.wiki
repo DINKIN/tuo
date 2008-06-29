@@ -1,5 +1,9 @@
 #summary One-sentence summary of this page.
 
+= Other solution prices =
+
+Mountain View uses some 400 Tropos routers covering 12 square miles, or about 35 to 40 routers per square mile. That sounds like a (now standard) $100K+ per sq mile install, or $1.2 million. 
+
 = Antenna =
 
 我们需要工作在2.4GHz的板状天线.我发现国内定向天线的供应还是很充足的,我觉得我们可以从价格,供货远近,供货时间,OEM能力等方面挑选一些公司(你看还有什么需要注意的).
