@@ -25,6 +25,9 @@ http://search.china.alibaba.com/search/offer_search.htm?keywords=%B0%E5%D7%B4%CC
 Fonera+ (FON2201)
 拥有一个以太网口和一个WAN口
 
+ WILIGEAR Integrated radio board WBD-500
+[http://www.wiligear.com/?q=products/cpu-boards/wbd-500]
+
 802. 11b / G Mini Router
 [http://yufotech.trustpass.alibaba.com/product/101002791/802_11b_G_Mini_Router.html]
     Atheros Communications' AR5007AP-G is a complete 802.11b/g wireless access point SoC that integrates a wireless network processor, media access controller (MAC), baseband, and all radio functions up to the antenna.
