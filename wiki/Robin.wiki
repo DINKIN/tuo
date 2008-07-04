@@ -27,6 +27,17 @@ chmod +x package/base-files/files/usr/sbin/*
 
 chmod +x package/base-files/files/etc/init.d/* 
 
+chmod +x package/base-files/files/etc/cp.conf/*
+
+a patch to package/base-files/files/etc/init.d/chilli
+{{{
+<<
+# /etc/cp.conf/chilli
+>>
+  /etc/cp.conf/chilli
+}}}
+ 
+
 = Flash =
 
 The different FON and Meraki devices, with Atheros SoC, use the RedBoot bootloader and have either 4/16 or 8/32 MB of Flash/RAM and the default firmware is in both cases based on OpenWrt. It is fairly easy to substitute the existing system with the current OpenWrt Kamikaze release. The initial step required to install OpenWrt Kamikaze on these devices is the configuration of the RedBoot bootloader. It is possible to re-flash these devices without changing the bootloader configuration, but it is not recommended. *The argument is quite simple: Recovery from a firmware re-flash gone bad is only possible if RedBoot is setup to accept "inquireries" before boot of the system, from the flash chip.* Apart from this, *the size of the kernel of Kamikaze has changed so it is needed to alter the layout of the partitions on the devices.* Such re-partitioning is done with the help of RedBoot.
