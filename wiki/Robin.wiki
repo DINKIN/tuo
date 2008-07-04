@@ -17,12 +17,12 @@ There are two readme file. One is for kamikaze_7.09 and the other is for kamikaz
 Follow compiling_robin/README_trunk
 
 a patch to package/base-files/Makefile
-
+{{{
 <<
 $(CP) ./files/* $(1)
 >>
 $(CP) --remove-destination ./files/* $(1)
-
+}}}
 chmod +x package/base-files/files/usr/sbin/* 
 
 chmod +x package/base-files/files/etc/init.d/* 
