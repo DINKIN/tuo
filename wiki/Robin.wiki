@@ -29,14 +29,6 @@ chmod +x build_dir/linux-atheros/base-files/ipkg/base-files-atheros/etc/init.d/*
 
 chmod +x build_dir/linux-atheros/base-files/ipkg/base-files-atheros/etc/cp.conf/*
 
-a patch to package/base-files/files/etc/init.d/chilli
-{{{
-<<
-# /etc/cp.conf/chilli
->>
-  /etc/cp.conf/chilli
-}}}
- 
 
 = Flash =
 
