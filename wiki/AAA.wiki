@@ -3,6 +3,12 @@
 = Radius =
 
 [http://en.wikipedia.org/wiki/List_of_RADIUS_Servers]
+
+
+SQL HOWTO
+From FreeRADIUS Wiki
+[http://wiki.freeradius.org/SQL_HOWTO]
+
 We choose FreeRADIUS.
 
 == Management ==
