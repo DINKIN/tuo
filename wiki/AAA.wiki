@@ -9,6 +9,9 @@ SQL HOWTO
 From FreeRADIUS Wiki
 [http://wiki.freeradius.org/SQL_HOWTO]
 
+
+HOWTO Chillispot with FreeRadius and MySQL[http://gentoo-wiki.com/HOWTO_Chillispot_with_FreeRadius_and_MySQL]
+
 We choose FreeRADIUS.
 
 == Management ==
