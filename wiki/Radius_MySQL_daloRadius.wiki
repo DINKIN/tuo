@@ -70,8 +70,7 @@ MySQL的配置基本同上，但是Windows版本在{{{share\doc\freeradius\examp
 
   * 进入aaa/contrib/db，用mysql-daloradius.sql在前面创建的radius数据库添加表。
 
-  访问页面，出现登录页面，如果登录后出错或者什么也不显示，则可能是PEAR没装。参见下面的链接完成安装，其中一定要安装DB包：
+  * 访问aaa/index.php，出现登录页面，如果登录后出错或者什么也不显示，则可能是PEAR没装。参见下面的链接完成安装，其中一定要安装DB包：
    http://pear.php.net/manual/en/installation.shared.php
   安装完成后，根据PAER的安装信息，修改aaa/library/opendb.php文件，修改DB.php的真实路径（最好用全路径）。
   之后，应该就可以登录daloradius了。
-
