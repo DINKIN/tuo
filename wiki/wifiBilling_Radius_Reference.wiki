@@ -1,0 +1,9 @@
+#summary Useful reference for wifi billing setup with Radius.
+
+= Guideline =
+
+How To Setup a Wi-Fi Hotspot:
+http://www.howtoforge.com/wifi_hotspot_setup
+
+How-To-[FreeRadius + WRT54 + Accounting + Authorization]:
+http://www.chillispot.info/chilliforum/viewtopic.php?id=7
