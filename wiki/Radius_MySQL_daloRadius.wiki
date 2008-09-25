@@ -36,6 +36,8 @@ http://www.freeradius.org
 注意admin.sql中创建了radius数据库用户和密码，并对radius用户进行了授权。
 后面如果使用daloRadius，需要radius用户对radius数据库的其他表也拥有权限。因此，这里可以顺便修改admin.sql，把授权语句改成{{{ grant all privileges on radius.* to 'radius'@'%';}}}
 
+如果使用daloRadius需要进入aaa/contrib/db，用mysql-daloradius.sql在前面创建的radius数据库添加表。
+
 === Radius配置 ===
 
   * 编辑{{{site_enabled/default}}}文件，把authorize, accounting, session, postauth这几个section里的sql注释去掉。
