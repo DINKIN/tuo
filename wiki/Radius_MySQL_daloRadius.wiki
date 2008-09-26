@@ -7,6 +7,9 @@ http://www.freeradius.org
 还有一个很奇怪的http://www.freeradius.net ，提供Windows版本的下载（木马？？？）。
 下面分别介绍FreeRadius在Linux和Windows上的安装过程，以及与MySQL的集成。
 
+= phpmyprepaid =
+http://sourceforge.net/projects/phpmyprepaid
+
 = Linux下的FreeRadius =
 
 这里安装MySQL的过程略去。
