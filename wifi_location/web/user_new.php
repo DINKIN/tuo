@@ -8,8 +8,7 @@ if(isset($_POST["submit"])){
 	
 	//generate query
 	$username = $_POST["username"];
-	//$password = md5($_POST["password"]);
-	$password = $_POST["password"];
+	$password = md5($_POST["password"]);
 	
 	$query = "SELECT * FROM user WHERE name='".$username."' AND password='".$password."'";
 	$result = mysql_query($query, $conn);
@@ -22,7 +21,7 @@ if(isset($_POST["submit"])){
     	$HTTP_SESSION_VARS['user_id'] = $resArray['user_id'];
    		$HTTP_SESSION_VARS['user_type'] = 'admin';
    		$HTTP_SESSION_VARS['user_name'] = $username;
-    	//echo "<meta http-equiv=\"Refresh\" content=\"0;url=./index.php\">"; 
+    	echo "<meta http-equiv=\"Refresh\" content=\"0;url=./index.php\">"; 
 	} else {
 			// there was no match found, so the login failed
     	unset($HTTP_SESSION_VARS['user_type']);
@@ -53,8 +52,6 @@ function load() {
 		map.addControl(new GMapTypeControl());
 		map.addControl(new GOverviewMapControl());
 
-    map.setCenter(new GLatLng(39.9799383, 116.3465950), 14);
-
 		var geocoder = new GClientGeocoder();
 		address = "北京航空航天大学 北京";
 		geocoder.getLatLng(address,function(point) {
@@ -64,18 +61,7 @@ function load() {
         		map.setCenter(point, 13);
       		}
     	  }
-  	);
-
-
-		<?
-		if(isset($HTTP_SESSION_VARS['user_id'])) {
-			$query = "SELECT latitude, longitude FROM fingerprint as fp, data_source as ds where ds.source_index = fp.source_index and ds.user_id=" .$HTTP_SESSION_VARS['user_id'] ;
-			$result = mysql_query($query, $conn);
-		  while($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-		    echo "map.addOverlay(new GMarker(new GLatLng(" . $row["latitude"] . ", ". $row["longitude"] . ")));";
-		  }
-	  }
-		?>
+  		);
   }
 }
 
@@ -87,20 +73,12 @@ function load() {
 <body onLoad="load()" onUnload="GUnload()">
 <div id="doc" style="padding:10px;width:800px;margin:0 auto;">
   <div style="width:500px;float:left;">
-    <?
-   	if(!isset($HTTP_SESSION_VARS['user_id'])) {
-    ?>
 		<form method="post" action='index.php', name="login" >
 			用户名： <input id="username" name="username" size="15" type="text">
 			密  码： <input id="password" name="password" size="15" value="" type="password">
 			<input class="button" name="submit" value="登陆" type="submit">
     	<a href=user_new.php">注册</a>
 		</form>
-		<?
-		} else {
-			echo "欢迎" . $HTTP_SESSION_VARS['user_name'];
-		}
-		?>
   </div>
   <div style="width:300px;float:left;">
 		<?
@@ -108,49 +86,6 @@ function load() {
 		?>
 	</div>
 </div>
-
-<?
-if(isset($HTTP_SESSION_VARS['user_id'])) {
-?>
-<div id="doc" style="padding:10px;width:800px;margin:0 auto;">
-  <div style="width:800px;float:left;">
-		<table width="100%" border="1"  cellpadding="0">
-			<tr> 
-				<th>数据文件</th>
-				<th>浏览</th>
-				<th>删除</th>
-			</tr>
-<?
-	$query = "SELECT * FROM data_source WHERE user_id=" . $HTTP_SESSION_VARS['user_id'];
-	$result = mysql_query($query, $conn);
-  while($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-  	echo "<tr>";
-  	echo "  <td>" . $row['filename'] . "</td>";
-  	echo "  <td>浏览</td>";
-  	echo "  <td>删除</td>";
-  	echo "</tr>";
-  }
-?>
-		</table> 
-  </div>
-</div>
-
-
-<div id="doc" style="padding:10px;width:800px;margin:0 auto;">
-  <div style="width:800px;float:left;">
-	  <form action="upload_file.php" method="post" enctype="multipart/form-data">
-	    <label for="file">Filename:</label>
-	    <input type="file" name="file" id="file" /> 
-	    <input type="submit" name="submit" value="Submit" />
-	    <input id="user_id" name="user_id" type=hidden value=<?php echo $HTTP_SESSION_VARS['user_id']?>>
-	  </form>
-  </div>
-</div>
-<?
-}
-?>
-
-
 <div id="doc" style="padding:10px;width:800px;margin:0 auto;">
 	<div id="bd" style="clear:both;margin-top:1em;">
 	  <div id="map" style="width: 800px; height: 600px">
