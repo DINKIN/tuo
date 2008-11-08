@@ -1,4 +1,4 @@
-<?
+﻿<?
   include "connect_db_wifilocation.php";
   $query = "SELECT * FROM fingerprint LIMIT 0, 300";
   $result = mysql_query($query, $conn);
@@ -26,10 +26,12 @@ function load() {
     map.addControl(new GMapTypeControl());
     map.addControl(new GOverviewMapControl());
 
-    map.setCenter(new GLatLng(39.917,116.397), 14);
+    // map.setCenter(new GLatLng(39.917,116.397), 14);
+    map.setCenter(new GLatLng(39.9799383, 116.3465950), 14);
     
+    /*
     var geocoder = new GClientGeocoder();
-    address = "北京";
+    address = "北京航空航天大学 北京";
     geocoder.getLatLng(address,function(point) {
         if (!point) {
           alert(address + " We tried to find your network, and this was the best estimate we could do. If it's incorrect, just move the map to the correct location.");
@@ -38,24 +40,11 @@ function load() {
         }
       }
     );
+    */
 
-    // 随机向地图添加 10 个标记
-    var bounds = map.getBounds();
-    var southWest = bounds.getSouthWest();
-    var northEast = bounds.getNorthEast();
-    var lngSpan = northEast.lng() - southWest.lng();
-    var latSpan = northEast.lat() - southWest.lat();
-    for (var i = 0; i < 10; i++) {
-      var latlng = new GLatLng(southWest.lat() + latSpan * Math.random(),
-                              southWest.lng() + lngSpan * Math.random());
-      map.addOverlay(new GMarker(latlng));
-    }
 <?
   while($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
     echo "map.addOverlay(new GMarker(new GLatLng(" . $row["latitude"] . ", ". $row["longitude"] . ")));";
-//    echo $row["longitude"] . "~";
-//    echo $row["latitude"] . "~";
-//    echo $row["fp_index"] . "~";
   }
 ?>
 
@@ -69,15 +58,21 @@ function load() {
 
 <body onLoad="load()" onUnload="GUnload()">
 <div id="doc" style="padding:10px;width:740px;margin:0 auto;">
+
 <div id="hd">
   <div style="width:140px;float:left;"></div>
   <div style="width:295px;float:left;">
     <h2 class="pageName">您的位置</h2>
   </div>
   <div style="width:295px;float:right;">
+  <form action="upload_file.php" method="post" enctype="multipart/form-data">
+    <label for="file">Filename:</label>
+    <input type="file" name="file" id="file" /> 
+    <input type="submit" name="submit" value="Submit" />
+  </form>
   </div>
 </div>
-<!-- header -->
+
 <div id="bd" style="clear:both;margin-top:1em;">
   <div id="column-left" style="float:left;width:580px;">
     <div>
@@ -87,7 +82,6 @@ function load() {
   </div>
   <div id="ft" style="clear:both;">
   </div>
-  <!-- footer -->
 </div>
 </body>
 </html>
